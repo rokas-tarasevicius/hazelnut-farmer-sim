@@ -19,6 +19,7 @@ export interface Tile {
   lastHarvestedAt?: number;
   isWatered?: boolean;    // true = growing at 2x speed
   hasSprinkler?: boolean; // auto-reapplies isWatered every tick
+  hasDrone?: boolean;     // auto-harvests nuts when ready
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
@@ -46,6 +47,7 @@ export interface GameState {
   water: (row: number, col: number) => void;
   placeSprinkler: (row: number, col: number) => void;
   cutDownTree: (row: number, col: number) => void;
+  placeDrone: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -59,8 +61,9 @@ export const BRIDGE_TIME = 20; // seconds
 export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
 export const SPRINKLER_COST = 200;
+export const DRONE_COST = 50;
 
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 6;
 
 export function getLandPrice(row: number, col: number): number {
   const start = getPlayerStart();
@@ -260,6 +263,19 @@ export const useGameStore = create<GameState>()(
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
       },
 
+      placeDrone: (row, col) => {
+        const state = get();
+        if (state.money < DRONE_COST) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasDrone: true };
+
+        set({ grid: newGrid, money: state.money - DRONE_COST });
+      },
+
       movePlayer: (direction) => {
         const state = get();
         const dirMap = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] } as const;
@@ -289,6 +305,8 @@ export const useGameStore = create<GameState>()(
         const state = get();
         const now = Date.now();
         let changed = false;
+        let moneyEarned = 0;
+        let harvestsGained = 0;
 
         const newGrid = state.grid.map((r) =>
           r.map((tile) => {
@@ -303,12 +321,11 @@ export const useGameStore = create<GameState>()(
               const elapsed = (now - tile.clearingAt) / 1000;
               if (elapsed >= CLEAR_TIME) {
                 changed = true;
-                return { ...tile, state: 'empty' as TileState, clearingAt: undefined };
+                tile = { ...tile, state: 'empty' as TileState, clearingAt: undefined };
               }
             }
 
             // Watering boost: subtract extra 1000ms from growth timers each tick
-            // (1 real second = 2 virtual seconds when watered, cancelling the 2x slowdown)
             if (tile.isWatered) {
               if (tile.state === 'planted' && tile.plantedAt) {
                 tile = { ...tile, plantedAt: tile.plantedAt - 1000 };
@@ -324,7 +341,7 @@ export const useGameStore = create<GameState>()(
               const species = TREE_SPECIES[tile.treeType];
               if (species && (now - tile.plantedAt) / 1000 >= species.growTime) {
                 changed = true;
-                return { ...tile, state: 'harvestable' as TileState, isWatered: false };
+                tile = { ...tile, state: 'harvestable' as TileState, isWatered: false };
               }
             }
 
@@ -333,7 +350,18 @@ export const useGameStore = create<GameState>()(
               const species = TREE_SPECIES[tile.treeType];
               if (species && (now - tile.lastHarvestedAt) / 1000 >= species.harvestTime) {
                 changed = true;
-                return { ...tile, state: 'harvestable' as TileState, lastHarvestedAt: undefined, isWatered: false };
+                tile = { ...tile, state: 'harvestable' as TileState, lastHarvestedAt: undefined, isWatered: false };
+              }
+            }
+
+            // Drone: auto-harvest when nuts are ready
+            if (tile.hasDrone && tile.state === 'harvestable' && tile.treeType) {
+              const species = TREE_SPECIES[tile.treeType];
+              if (species) {
+                moneyEarned += species.sellPrice;
+                harvestsGained += 1;
+                changed = true;
+                return { ...tile, state: 'growing' as TileState, lastHarvestedAt: now };
               }
             }
 
@@ -351,7 +379,11 @@ export const useGameStore = create<GameState>()(
         );
 
         if (changed) {
-          set({ grid: newGrid });
+          set({
+            grid: newGrid,
+            money: state.money + moneyEarned,
+            totalHarvests: state.totalHarvests + harvestsGained,
+          });
         }
       },
 

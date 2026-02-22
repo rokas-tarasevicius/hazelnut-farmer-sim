@@ -85,6 +85,9 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
       {!tile.hasSprinkler && tile.isWatered && (
         <div className={styles.waterIcon}>💧</div>
       )}
+      {tile.hasDrone && (
+        <div className={styles.droneIcon}>🤖</div>
+      )}
       {progress !== undefined && progress < 1 && (
         <div className={styles.progressBar}>
           <div
