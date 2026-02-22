@@ -70,11 +70,6 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
     progress = Math.min((Date.now() - tile.bridgingAt) / (20 * 1000), 1);
   }
 
-  // Harvest drone progress bar
-  const droneProgress = tile.droneHarvestingAt
-    ? Math.min((Date.now() - tile.droneHarvestingAt) / (DRONE_HARVEST_TIME * 1000), 1)
-    : undefined;
-
   // Watering drone progress bar
   const wateringDroneProgress = tile.wateringDroneAt
     ? Math.min((Date.now() - tile.wateringDroneAt) / (DRONE_HARVEST_TIME * 1000), 1)
@@ -100,26 +95,11 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
       {!tile.hasWateringDrone && tile.isWatered && (
         <div className={styles.waterIcon}>💧</div>
       )}
-      {tile.hasDrone && (
-        <img
-          src="/sprites/drone_harvest.svg"
-          alt="harvest drone"
-          className={`${styles.droneIcon} ${tile.droneHarvestingAt ? styles.droneActive : ''}`}
-        />
-      )}
       {wateringDroneProgress !== undefined && (
         <div className={styles.wateringDroneProgressBar}>
           <div
             className={styles.wateringDroneProgressFill}
             style={{ width: `${wateringDroneProgress * 100}%` }}
-          />
-        </div>
-      )}
-      {droneProgress !== undefined && (
-        <div className={styles.droneProgressBar}>
-          <div
-            className={styles.droneProgressFill}
-            style={{ width: `${droneProgress * 100}%` }}
           />
         </div>
       )}

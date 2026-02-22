@@ -29,7 +29,6 @@ export function ActionPanel() {
   const buyWateringCan = useGameStore((s) => s.buyWateringCan);
   const water = useGameStore((s) => s.water);
   const cutDownTree = useGameStore((s) => s.cutDownTree);
-  const placeDrone = useGameStore((s) => s.placeDrone);
   const placeWateringDrone = useGameStore((s) => s.placeWateringDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -113,13 +112,6 @@ export function ActionPanel() {
               handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
-          if (!tile.hasDrone) {
-            actions.push({
-              label: `Deploy Drone`,
-              description: 'Auto-harvests nuts when ready',
-              handler: () => placeDrone(playerRow, playerCol),
-            });
-          }
           actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
@@ -151,13 +143,6 @@ export function ActionPanel() {
               handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
-          if (!tile.hasDrone) {
-            actions.push({
-              label: `Deploy Drone`,
-              description: 'Auto-harvests nuts when ready',
-              handler: () => placeDrone(playerRow, playerCol),
-            });
-          }
           actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
@@ -184,13 +169,6 @@ export function ActionPanel() {
               label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
               description: 'Auto-waters this tree each cycle',
               handler: () => placeWateringDrone(playerRow, playerCol),
-            });
-          }
-          if (!tile.hasDrone) {
-            actions.push({
-              label: `Deploy Drone`,
-              description: 'Auto-harvests nuts when ready',
-              handler: () => placeDrone(playerRow, playerCol),
             });
           }
           actions.push({

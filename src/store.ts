@@ -85,9 +85,9 @@ export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
 export const WATERING_DRONE_COST = 60;
 export const DRONE_COST = 50;
-export const DRONE_HARVEST_TIME = 5; // seconds drone takes to harvest
+export const DRONE_HARVEST_TIME = 2; // seconds drone takes to harvest/water
 
-const SAVE_VERSION = 8;
+const SAVE_VERSION = 9;
 
 const TREE_STATES = new Set<TileState>(['planted', 'growing', 'harvestable']);
 
@@ -494,9 +494,9 @@ export const useGameStore = create<GameState>()(
             const tCol = d.targetCol;
 
             // Figure out how many steps the drone can take.
-            // With a 1-second tick and 500ms per step, a drone can take up to 2 steps.
+            // With a 1-second tick and 250ms per step, a drone can take up to 4 steps.
             const elapsed = now - d.lastMoveAt;
-            const steps = Math.min(Math.floor(elapsed / 500), 2);
+            const steps = Math.min(Math.floor(elapsed / 250), 4);
 
             for (let i = 0; i < steps; i++) {
               if (d.row === tRow && d.col === tCol) break;

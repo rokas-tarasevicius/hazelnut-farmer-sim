@@ -55,7 +55,7 @@ export function Drones() {
             className={`${styles.drone} ${stateClass}`}
             style={{ transform: `translate(${x}px, ${y}px)` }}
           >
-            <span className={styles.icon}>🤖</span>
+            <img src="/sprites/drone_harvest.svg" alt="harvest drone" className={styles.icon} />
             {harvestProgress !== undefined && (
               <div className={styles.progressBar}>
                 <div
