@@ -58,7 +58,7 @@ export const BRIDGE_COST = 100;
 export const BRIDGE_TIME = 20; // seconds
 export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
-export const SPRINKLER_COST = 200;
+export const SPRINKLER_COST = 75;
 
 const SAVE_VERSION = 5;
 
