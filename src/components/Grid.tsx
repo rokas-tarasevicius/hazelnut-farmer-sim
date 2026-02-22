@@ -1,6 +1,7 @@
 import { useGameStore } from '../store';
 import { Tile } from './Tile';
 import { Player } from './Player';
+import { Drones } from './Drones';
 import styles from '../styles/Grid.module.css';
 
 export function Grid() {
@@ -25,6 +26,7 @@ export function Grid() {
           />
         ))
       )}
+      <Drones />
       <Player />
     </div>
   );
