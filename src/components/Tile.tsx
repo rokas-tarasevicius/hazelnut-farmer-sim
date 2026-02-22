@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { Tile as TileData } from '../store';
+import { DRONE_HARVEST_TIME } from '../store';
 import { getGrowthProgress, getGrowthStage, TREE_SPECIES } from '../data/trees';
 import { getTreeSpritePath } from '../data/sprites';
 import styles from '../styles/Tile.module.css';
@@ -69,6 +70,11 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
     progress = Math.min((Date.now() - tile.bridgingAt) / (20 * 1000), 1);
   }
 
+  // Drone harvest progress bar (shown separately, above the normal progress bar)
+  const droneProgress = tile.droneHarvestingAt
+    ? Math.min((Date.now() - tile.droneHarvestingAt) / (DRONE_HARVEST_TIME * 1000), 1)
+    : undefined;
+
   const stateClass = tile.locked ? styles.locked :
     (tile.state === 'bridging' ? styles.clearing :
       styles[tile.state]) || '';
@@ -84,6 +90,19 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
       )}
       {!tile.hasSprinkler && tile.isWatered && (
         <div className={styles.waterIcon}>💧</div>
+      )}
+      {tile.hasDrone && (
+        <div className={`${styles.droneIcon} ${tile.droneHarvestingAt ? styles.droneActive : ''}`}>
+          🤖
+        </div>
+      )}
+      {droneProgress !== undefined && (
+        <div className={styles.droneProgressBar}>
+          <div
+            className={styles.droneProgressFill}
+            style={{ width: `${droneProgress * 100}%` }}
+          />
+        </div>
       )}
       {progress !== undefined && progress < 1 && (
         <div className={styles.progressBar}>
