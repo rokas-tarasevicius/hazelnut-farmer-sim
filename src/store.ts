@@ -295,26 +295,6 @@ export const useGameStore = create<GameState>()(
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
       },
 
-      buyDrone: () => {
-        const state = get();
-        if (state.money < DRONE_COST) return;
-        const newDrone: Drone = {
-          id: `drone-${state.nextDroneId}`,
-          row: state.playerRow,
-          col: state.playerCol,
-          state: 'idle',
-          targetRow: null,
-          targetCol: null,
-          harvestingAt: null,
-          lastMoveAt: Date.now(),
-        };
-        set({
-          money: state.money - DRONE_COST,
-          drones: [...state.drones, newDrone],
-          nextDroneId: state.nextDroneId + 1,
-        });
-      },
-
       buyWateringDrone: () => {
         const state = get();
         if (state.money < WATERING_DRONE_COST) return;

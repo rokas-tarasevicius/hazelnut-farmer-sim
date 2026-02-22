@@ -50,7 +50,6 @@ export function ShopBar() {
       icon: '/sprites/drone_harvest.svg',
       name: 'Harvest Drone',
       description: 'Autonomous harvester — flies to trees',
-      isSprite: true,
       cost: DRONE_COST,
       badge: droneCount > 0 ? droneCount : undefined,
       disabled: money < DRONE_COST,

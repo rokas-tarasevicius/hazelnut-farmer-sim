@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, DRONE_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
