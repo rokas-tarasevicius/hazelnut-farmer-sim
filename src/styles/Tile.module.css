@@ -79,9 +79,41 @@
   z-index: 4;
 }
 
-.waterIcon {
+.droneIcon {
+  position: absolute;
   top: 2px;
+  left: 2px;
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.droneActive {
+  animation: droneWork 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes droneWork {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+/* Drone harvest progress (gold bar, above normal progress bar) */
+.droneProgressBar {
+  position: absolute;
+  bottom: 8px;
+  left: 2px;
   right: 2px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+.droneProgressFill {
+  height: 100%;
+  background: #e0c040;
+  border-radius: 2px;
+  transition: width 1s linear;
 }
 
 /* Normal growth progress bar */
@@ -101,6 +133,7 @@
   border-radius: 2px;
   transition: width 1s linear;
 }
+
 
 .treeLabel {
   position: absolute;

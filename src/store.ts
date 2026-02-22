@@ -17,9 +17,10 @@ export interface Tile {
   clearingAt?: number;
   bridgingAt?: number;
   lastHarvestedAt?: number;
-  isWatered?: boolean;    // true = growing at 2x speed
-  hasSprinkler?: boolean; // auto-reapplies isWatered every tick
-  hasDrone?: boolean;     // auto-harvests nuts when ready
+  isWatered?: boolean;
+  hasSprinkler?: boolean;
+  hasDrone?: boolean;
+  droneHarvestingAt?: number;
 }
 
 // --- Autonomous drone entities ---
@@ -66,9 +67,9 @@ export interface GameState {
   water: (row: number, col: number) => void;
   buyDrone: () => void;
   buySprinkler: () => void;
-  placeSprinkler: (row: number, col: number) => void;
   cutDownTree: (row: number, col: number) => void;
   placeDrone: (row: number, col: number) => void;
+  placeSprinkler: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -76,9 +77,9 @@ export interface GameState {
 }
 
 export const CLEAR_COST = 15;
-export const CLEAR_TIME = 10; // seconds
+export const CLEAR_TIME = 10;
 export const BRIDGE_COST = 100;
-export const BRIDGE_TIME = 20; // seconds
+export const BRIDGE_TIME = 20;
 export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
 export const SPRINKLER_COST = 75;
@@ -224,7 +225,8 @@ export const useGameStore = create<GameState>()(
           ...tile,
           state: 'growing',
           lastHarvestedAt: Date.now(),
-          isWatered: false, // cleared on harvest; sprinkler re-applies next tick
+          isWatered: false,
+          droneHarvestingAt: undefined,
         };
 
         set({
@@ -256,8 +258,6 @@ export const useGameStore = create<GameState>()(
       buyDrone: () => {
         const state = get();
         if (state.money < DRONE_COST) return;
-        // Spawn a brand-new drone at the player's current position.
-        // Each drone gets a unique ID like "drone-0", "drone-1", etc.
         const newDrone: Drone = {
           id: `drone-${state.nextDroneId}`,
           row: state.playerRow,
@@ -275,24 +275,6 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      buySprinkler: () => {
-        const state = get();
-        if (state.money < SPRINKLER_COST) return;
-        set({ money: state.money - SPRINKLER_COST, sprinklerInventory: state.sprinklerInventory + 1 });
-      },
-
-      placeSprinkler: (row, col) => {
-        const state = get();
-        if (state.sprinklerInventory < 1) return;
-
-        const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state) || tile.hasSprinkler) return;
-
-        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = { ...tile, hasSprinkler: true, isWatered: true };
-
-        set({ grid: newGrid, sprinklerInventory: state.sprinklerInventory - 1 });
-      },
 
       cutDownTree: (row, col) => {
         const state = get();
@@ -312,9 +294,21 @@ export const useGameStore = create<GameState>()(
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
       },
 
-      placeDrone: (row, col) => {
+      buyDrone: () => {
         const state = get();
         if (state.money < DRONE_COST) return;
+        set({ money: state.money - DRONE_COST, droneInventory: state.droneInventory + 1 });
+      },
+
+      buySprinkler: () => {
+        const state = get();
+        if (state.money < SPRINKLER_COST) return;
+        set({ money: state.money - SPRINKLER_COST, sprinklerInventory: state.sprinklerInventory + 1 });
+      },
+
+      placeDrone: (row, col) => {
+        const state = get();
+        if (state.droneInventory < 1) return;
 
         const tile = state.grid[row]?.[col];
         if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
@@ -322,7 +316,20 @@ export const useGameStore = create<GameState>()(
         const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
         newGrid[row][col] = { ...tile, hasDrone: true };
 
-        set({ grid: newGrid, money: state.money - DRONE_COST });
+        set({ grid: newGrid, droneInventory: state.droneInventory - 1 });
+      },
+
+      placeSprinkler: (row, col) => {
+        const state = get();
+        if (state.sprinklerInventory < 1) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasSprinkler) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasSprinkler: true, isWatered: true };
+
+        set({ grid: newGrid, sprinklerInventory: state.sprinklerInventory - 1 });
       },
 
       movePlayer: (direction) => {
