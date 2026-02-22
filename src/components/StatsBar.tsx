@@ -4,6 +4,7 @@ import styles from '../styles/StatsBar.module.css';
 export function StatsBar() {
   const money = useGameStore((s) => s.money);
   const totalHarvests = useGameStore((s) => s.totalHarvests);
+  const hasWateringCan = useGameStore((s) => s.hasWateringCan);
   const treeCount = useGameStore((s) =>
     s.grid.flat().filter((t) => t.state === 'planted' || t.state === 'growing' || t.state === 'harvestable').length
   );
@@ -25,6 +26,11 @@ export function StatsBar() {
           <span className={styles.statLabel}>Harvests:</span>
           <span className={styles.statValue}>{totalHarvests}</span>
         </div>
+        {hasWateringCan && (
+          <div className={styles.stat}>
+            <span className={styles.statValue}>💧 Watering Can</span>
+          </div>
+        )}
         <span className={styles.hints}>Arrows: Move | Enter: Interact | Esc: Close</span>
         <button className={styles.resetBtn} onClick={resetGame}>
           Reset

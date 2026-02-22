@@ -85,6 +85,17 @@
   transition: width 1s linear;
 }
 
+.waterIcon,
+.sprinklerIcon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 4;
+}
+
 .treeLabel {
   position: absolute;
   bottom: 8px;
