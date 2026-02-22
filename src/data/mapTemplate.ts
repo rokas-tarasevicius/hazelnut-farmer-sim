@@ -78,22 +78,59 @@ export function generateMap(seed: number): CellDef[][] {
     }
   }
 
-  // --- Starting region: ~5x5 unlocked area near center-left ---
-  const startRow = Math.floor(MAP_ROWS / 2) - 2;
-  const startCol = 2;
-  for (let r = startRow; r < startRow + 5 && r < MAP_ROWS; r++) {
-    for (let c = startCol; c < startCol + 6 && c < MAP_COLS; c++) {
-      if (map[r][c][0] !== 'r') {
-        map[r][c] = [map[r][c][0], 0];
+  // --- Starting region: 3x3 unlocked area adjacent to river 1 ---
+  // Find a spot on the left side of river 1 near the vertical center
+  const centerRow = Math.floor(MAP_ROWS / 2);
+  let startRow = centerRow - 1;
+  let startCol = -1;
+
+  // Scan rows near center to find river 1's column, then place start just left of it
+  for (let r = centerRow - 2; r <= centerRow + 2 && r < MAP_ROWS; r++) {
+    for (let c = 3; c < MAP_COLS - 3; c++) {
+      if (map[r][c][0] === 'r') {
+        // Found river — place 3x3 starting area just to its left
+        startCol = c - 3;
+        startRow = r - 1;
+        break;
+      }
+    }
+    if (startCol >= 0) break;
+  }
+
+  // Fallback if no river found near center
+  if (startCol < 0) {
+    startCol = 2;
+    startRow = centerRow - 1;
+  }
+
+  // Clamp to map bounds
+  startRow = Math.max(0, Math.min(startRow, MAP_ROWS - 3));
+  startCol = Math.max(0, Math.min(startCol, MAP_COLS - 3));
+
+  // Clear the 3x3 area: force grass, unlock, no river
+  for (let r = startRow; r < startRow + 3; r++) {
+    for (let c = startCol; c < startCol + 3; c++) {
+      if (map[r][c][0] === 'r') {
+        map[r][c] = ['g', 0]; // replace river with grass in starting zone
+      } else {
+        map[r][c] = [map[r][c][0], 0]; // keep terrain, just unlock
       }
     }
   }
 
+  // Store start position for player spawn (center of 3x3)
+  _lastStartRow = startRow + 1;
+  _lastStartCol = startCol + 1;
+
   return map;
 }
 
+// Player start is determined during map generation
+let _lastStartRow = Math.floor(MAP_ROWS / 2);
+let _lastStartCol = 4;
+
 export function getPlayerStart(): { row: number; col: number } {
-  return { row: Math.floor(MAP_ROWS / 2), col: 4 };
+  return { row: _lastStartRow, col: _lastStartCol };
 }
 
 export function getTerrainType(code: 'g' | 'f' | 'r'): 'grass' | 'forest' | 'river' {

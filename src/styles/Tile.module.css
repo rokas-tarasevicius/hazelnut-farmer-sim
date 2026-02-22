@@ -32,7 +32,7 @@
 }
 
 .planted {
-  background: #4a7a2e;
+  background: #7a6a30;
 }
 
 .clearing {
@@ -41,8 +41,12 @@
 }
 
 .harvestable {
-  background: #6aaa3e;
+  background: #8a7a38;
   animation: glow 1.5s ease-in-out infinite;
+}
+
+.growing {
+  background: #6a5a28;
 }
 
 .natural {

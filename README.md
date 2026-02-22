@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+# Hazelnut Farmer Simulator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A tile-based farming simulator where you plant nut trees, harvest them for profit, expand your land, clear forests, and build bridges across rivers.
 
-Currently, two official plugins are available:
+**Play now:** [hazelnut-farmer-sim.vercel.app](https://hazelnut-farmer-sim.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How to play
 
-## React Compiler
+- **Move** with arrow keys or WASD
+- **Press Enter** to open the action menu on the tile you're standing on
+- **Plant trees**, wait for them to grow, then **harvest** nuts for money
+- **Buy land** to expand your farm, **clear forests** for planting space, and **build bridges** to cross rivers
+- Progress is saved automatically in your browser
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tree species
 
-## Expanding the ESLint configuration
+| Tree | Cost | Growth time | Harvest value |
+|------|------|-------------|---------------|
+| Common Hazelnut | $30 | 60s | $20 |
+| Turkish Hazelnut | $75 | 120s | $50 |
+| Almond | $150 | 180s | $100 |
+| Walnut | $300 | 300s | $200 |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Development
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js 18+
+- npm
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Getting started
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev          # Start dev server with hot reload
+npm run build        # Type-check and build for production
+npm run preview      # Preview production build locally
+npm run lint         # Run ESLint
+npm run test         # Run tests once
+npm run test:watch   # Run tests in watch mode
 ```
+
+### Tech stack
+
+- **React 19** + **TypeScript** (strict mode)
+- **Vite** for bundling and dev server
+- **Zustand** for state management with localStorage persistence
+- **CSS Modules** for scoped styling
+- **Vitest** + **Testing Library** for tests
