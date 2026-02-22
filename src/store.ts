@@ -17,8 +17,11 @@ export interface Tile {
   clearingAt?: number;
   bridgingAt?: number;
   lastHarvestedAt?: number;
-  isWatered?: boolean;    // true = growing at 2x speed
-  hasSprinkler?: boolean; // auto-reapplies isWatered every tick
+  isWatered?: boolean;
+  hasWateringDrone?: boolean;
+  wateringDroneAt?: number;
+  hasDrone?: boolean;
+  droneHarvestingAt?: number;
 }
 
 // --- Autonomous drone entities ---
@@ -54,7 +57,7 @@ export interface GameState {
   hasWateringCan: boolean;
   drones: Drone[];          // autonomous flying drones
   nextDroneId: number;      // counter for generating unique drone IDs
-  sprinklerInventory: number;
+  wateringDroneInventory: number;
 
   plantTree: (row: number, col: number, treeType: string) => void;
   clearForest: (row: number, col: number) => void;
@@ -64,9 +67,10 @@ export interface GameState {
   buyWateringCan: () => void;
   water: (row: number, col: number) => void;
   buyDrone: () => void;
-  buySprinkler: () => void;
-  placeSprinkler: (row: number, col: number) => void;
+  buyWateringDrone: () => void;
   cutDownTree: (row: number, col: number) => void;
+  placeDrone: (row: number, col: number) => void;
+  placeWateringDrone: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -74,12 +78,12 @@ export interface GameState {
 }
 
 export const CLEAR_COST = 15;
-export const CLEAR_TIME = 10; // seconds
+export const CLEAR_TIME = 10;
 export const BRIDGE_COST = 100;
-export const BRIDGE_TIME = 20; // seconds
+export const BRIDGE_TIME = 20;
 export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
-export const SPRINKLER_COST = 75;
+export const WATERING_DRONE_COST = 60;
 export const DRONE_COST = 50;
 export const DRONE_HARVEST_TIME = 5; // seconds drone takes to harvest
 
@@ -136,7 +140,7 @@ function freshState() {
     hasWateringCan: false,
     drones: [],
     nextDroneId: 0,
-    sprinklerInventory: 0,
+    wateringDroneInventory: 0,
   };
 }
 
@@ -222,7 +226,8 @@ export const useGameStore = create<GameState>()(
           ...tile,
           state: 'growing',
           lastHarvestedAt: Date.now(),
-          isWatered: false, // cleared on harvest; sprinkler re-applies next tick
+          isWatered: false,
+          droneHarvestingAt: undefined,
         };
 
         set({
@@ -254,8 +259,6 @@ export const useGameStore = create<GameState>()(
       buyDrone: () => {
         const state = get();
         if (state.money < DRONE_COST) return;
-        // Spawn a brand-new drone at the player's current position.
-        // Each drone gets a unique ID like "drone-0", "drone-1", etc.
         const newDrone: Drone = {
           id: `drone-${state.nextDroneId}`,
           row: state.playerRow,
@@ -273,24 +276,6 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      buySprinkler: () => {
-        const state = get();
-        if (state.money < SPRINKLER_COST) return;
-        set({ money: state.money - SPRINKLER_COST, sprinklerInventory: state.sprinklerInventory + 1 });
-      },
-
-      placeSprinkler: (row, col) => {
-        const state = get();
-        if (state.sprinklerInventory < 1) return;
-
-        const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state) || tile.hasSprinkler) return;
-
-        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = { ...tile, hasSprinkler: true, isWatered: true };
-
-        set({ grid: newGrid, sprinklerInventory: state.sprinklerInventory - 1 });
-      },
 
       cutDownTree: (row, col) => {
         const state = get();
@@ -308,6 +293,38 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
+      },
+
+      buyWateringDrone: () => {
+        const state = get();
+        if (state.money < WATERING_DRONE_COST) return;
+        set({ money: state.money - WATERING_DRONE_COST, wateringDroneInventory: state.wateringDroneInventory + 1 });
+      },
+
+      placeDrone: (row, col) => {
+        const state = get();
+        if (state.money < DRONE_COST) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasDrone: true };
+
+        set({ grid: newGrid, money: state.money - DRONE_COST });
+      },
+
+      placeWateringDrone: (row, col) => {
+        const state = get();
+        if (state.wateringDroneInventory < 1) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasWateringDrone) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasWateringDrone: true };
+
+        set({ grid: newGrid, wateringDroneInventory: state.wateringDroneInventory - 1 });
       },
 
       movePlayer: (direction) => {
@@ -345,9 +362,19 @@ export const useGameStore = create<GameState>()(
         // --- Phase 1: Update tiles (growth, sprinklers, bridges) ---
         const newGrid = state.grid.map((r) =>
           r.map((tile) => {
-            // Sprinklers keep tree watered automatically
-            if (tile.hasSprinkler && TREE_STATES.has(tile.state) && !tile.isWatered) {
-              tile = { ...tile, isWatered: true };
+            // Watering drone: auto-waters planted/growing trees after a delay (same delay as harvest drone)
+            if (tile.hasWateringDrone && (tile.state === 'planted' || tile.state === 'growing') && !tile.isWatered) {
+              if (!tile.wateringDroneAt) {
+                tile = { ...tile, wateringDroneAt: now };
+                gridChanged = true;
+              } else if ((now - tile.wateringDroneAt) / 1000 >= DRONE_HARVEST_TIME) {
+                tile = { ...tile, isWatered: true, wateringDroneAt: undefined };
+                gridChanged = true;
+              }
+            }
+            // Clear wateringDroneAt when no longer needed
+            if (tile.wateringDroneAt && (tile.isWatered || (tile.state !== 'planted' && tile.state !== 'growing'))) {
+              tile = { ...tile, wateringDroneAt: undefined };
               gridChanged = true;
             }
 

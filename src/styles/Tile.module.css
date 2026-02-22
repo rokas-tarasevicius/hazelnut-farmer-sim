@@ -68,7 +68,6 @@
 }
 
 /* Corner icons */
-.sprinklerIcon,
 .waterIcon {
   position: absolute;
   top: 2px;
@@ -76,12 +75,71 @@
   font-size: 10px;
   line-height: 1;
   pointer-events: none;
-  z-index: 4;
 }
 
-.waterIcon {
+.wateringDroneIcon {
+  position: absolute;
   top: 2px;
   right: 2px;
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.droneIcon {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.droneActive {
+  animation: droneWork 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes droneWork {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+/* Watering drone progress (blue bar, topmost) */
+.wateringDroneProgressBar {
+  position: absolute;
+  bottom: 14px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+.wateringDroneProgressFill {
+  height: 100%;
+  background: #40a0e0;
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* Harvest drone progress (gold bar, above normal progress bar) */
+.droneProgressBar {
+  position: absolute;
+  bottom: 8px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+.droneProgressFill {
+  height: 100%;
+  background: #e0c040;
+  border-radius: 2px;
+  transition: width 1s linear;
 }
 
 /* Normal growth progress bar */
@@ -101,6 +159,7 @@
   border-radius: 2px;
   transition: width 1s linear;
 }
+
 
 .treeLabel {
   position: absolute;

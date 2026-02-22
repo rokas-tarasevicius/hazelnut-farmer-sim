@@ -1,4 +1,4 @@
-import { useGameStore, WATERING_CAN_COST, SPRINKLER_COST, DRONE_COST } from '../store';
+import { useGameStore, WATERING_CAN_COST, WATERING_DRONE_COST, DRONE_COST } from '../store';
 import styles from '../styles/ShopBar.module.css';
 
 interface ShopItem {
@@ -11,16 +11,17 @@ interface ShopItem {
   owned?: boolean;
   disabled: boolean;
   onBuy: () => void;
+  isSprite?: boolean;
 }
 
 export function ShopBar() {
   const money = useGameStore((s) => s.money);
   const hasWateringCan = useGameStore((s) => s.hasWateringCan);
   const droneCount = useGameStore((s) => s.drones.length);
-  const sprinklerInventory = useGameStore((s) => s.sprinklerInventory);
+  const wateringDroneInventory = useGameStore((s) => s.wateringDroneInventory);
   const buyWateringCan = useGameStore((s) => s.buyWateringCan);
   const buyDrone = useGameStore((s) => s.buyDrone);
-  const buySprinkler = useGameStore((s) => s.buySprinkler);
+  const buyWateringDrone = useGameStore((s) => s.buyWateringDrone);
 
   const items: ShopItem[] = [
     {
@@ -34,24 +35,26 @@ export function ShopBar() {
       onBuy: buyWateringCan,
     },
     {
-      id: 'sprinkler',
-      icon: '🚿',
-      name: 'Sprinkler',
-      description: 'Auto-waters a tree tile permanently',
-      cost: SPRINKLER_COST,
-      badge: sprinklerInventory > 0 ? sprinklerInventory : undefined,
-      disabled: money < SPRINKLER_COST,
-      onBuy: buySprinkler,
+      id: 'watering-drone',
+      icon: '/sprites/drone_water.svg',
+      name: 'Watering Drone',
+      description: 'Auto-waters a tree each grow cycle',
+      cost: WATERING_DRONE_COST,
+      badge: wateringDroneInventory > 0 ? wateringDroneInventory : undefined,
+      disabled: money < WATERING_DRONE_COST,
+      onBuy: buyWateringDrone,
+      isSprite: true,
     },
     {
       id: 'drone',
-      icon: '🤖',
-      name: 'Drone',
+      icon: '/sprites/drone_harvest.svg',
+      name: 'Harvest Drone',
       description: 'Autonomous harvester — flies to trees',
       cost: DRONE_COST,
       badge: droneCount > 0 ? droneCount : undefined,
       disabled: money < DRONE_COST,
       onBuy: buyDrone,
+      isSprite: true,
     },
   ];
 
@@ -68,7 +71,9 @@ export function ShopBar() {
             title={item.description}
           >
             <div className={styles.iconWrap}>
-              <span className={styles.icon}>{item.icon}</span>
+              {item.isSprite
+                ? <img src={item.icon} alt={item.name} className={styles.iconSprite} />
+                : <span className={styles.icon}>{item.icon}</span>}
               {item.badge !== undefined && (
                 <span className={styles.badge}>{item.badge}</span>
               )}

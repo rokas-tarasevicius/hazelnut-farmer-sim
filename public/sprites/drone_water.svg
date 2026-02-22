@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Left rotor blade (blue) -->
+  <rect x="0" y="2" width="5" height="1" fill="#3a90d0"/>
+  <!-- Right rotor blade (blue) -->
+  <rect x="11" y="2" width="5" height="1" fill="#3a90d0"/>
+  <!-- Left arm (dark gray) -->
+  <rect x="3" y="3" width="3" height="1" fill="#505050"/>
+  <!-- Right arm (dark gray) -->
+  <rect x="10" y="3" width="3" height="1" fill="#505050"/>
+  <!-- Body -->
+  <rect x="5" y="2" width="6" height="5" fill="#303848"/>
+  <!-- Body top highlight -->
+  <rect x="6" y="3" width="4" height="1" fill="#485870"/>
+  <!-- Eye/sensor (blue) -->
+  <rect x="7" y="5" width="2" height="1" fill="#3a90d0"/>
+  <!-- Center arm / nozzle tube -->
+  <rect x="7" y="7" width="2" height="2" fill="#484858"/>
+  <!-- Nozzle head (blue) -->
+  <rect x="6" y="9" width="4" height="2" fill="#3a90d0"/>
+  <!-- Nozzle tip highlight -->
+  <rect x="7" y="9" width="2" height="1" fill="#60b0f0"/>
+  <!-- Water drop 1 (light blue) -->
+  <rect x="7" y="11" width="2" height="2" fill="#80ccf8"/>
+  <!-- Water drop 1 tip -->
+  <rect x="8" y="13" width="1" height="1" fill="#60b0f0"/>
+  <!-- Water drop 2 (smaller, offset) -->
+  <rect x="5" y="12" width="1" height="1" fill="#60b0f0"/>
+  <rect x="10" y="12" width="1" height="1" fill="#60b0f0"/>
+</svg>
