@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TREE_SPECIES } from './data/trees';
-import { MAP_TEMPLATE, MAP_ROWS, MAP_COLS, getTerrainType } from './data/mapTemplate';
+import { generateMap, MAP_ROWS, MAP_COLS, getTerrainType, getPlayerStart } from './data/mapTemplate';
 import { isTileWalkable } from './data/map';
 
 export type TerrainType = 'grass' | 'forest' | 'river';
-export type TileState = 'natural' | 'clearing' | 'empty' | 'planted' | 'harvestable' | 'bridging' | 'bridge';
+export type TileState = 'natural' | 'clearing' | 'empty' | 'planted' | 'growing' | 'harvestable' | 'bridging' | 'bridge';
 
 export interface Tile {
   id: string;
@@ -16,6 +16,7 @@ export interface Tile {
   plantedAt?: number;
   clearingAt?: number;
   bridgingAt?: number;
+  lastHarvestedAt?: number; // when nuts were last picked — regrows from here
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
@@ -30,7 +31,8 @@ export interface GameState {
   playerRow: number;
   playerCol: number;
   playerDirection: Direction;
-  showActionPanel: boolean;
+  showDialog: boolean;
+  mapSeed: number;
 
   plantTree: (row: number, col: number, treeType: string) => void;
   clearForest: (row: number, col: number) => void;
@@ -38,7 +40,7 @@ export interface GameState {
   buildBridge: (row: number, col: number) => void;
   harvest: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
-  toggleActionPanel: () => void;
+  toggleDialog: () => void;
   tick: () => void;
   resetGame: () => void;
 }
@@ -48,16 +50,21 @@ export const CLEAR_TIME = 10; // seconds
 export const BRIDGE_COST = 100;
 export const BRIDGE_TIME = 20; // seconds
 
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 export function getLandPrice(row: number, col: number): number {
-  // Further from starting area center (~12, 6) = more expensive
-  const distance = Math.abs(row - 12) + Math.abs(col - 6);
+  const start = getPlayerStart();
+  const distance = Math.abs(row - start.row) + Math.abs(col - start.col);
   return 50 + distance * 5;
 }
 
-function createInitialGrid(): Tile[][] {
-  return MAP_TEMPLATE.map((row, r) =>
+function newSeed(): number {
+  return Math.floor(Math.random() * 2147483647);
+}
+
+function createInitialGrid(seed: number): Tile[][] {
+  const template = generateMap(seed);
+  return template.map((row, r) =>
     row.map((cell, c) => {
       const terrain = getTerrainType(cell[0]);
       const locked = cell[1] === 1;
@@ -75,19 +82,28 @@ function createInitialGrid(): Tile[][] {
   );
 }
 
+function freshState() {
+  const seed = newSeed();
+  const start = getPlayerStart();
+  return {
+    money: 100,
+    totalHarvests: 0,
+    treesPlanted: 0,
+    grid: createInitialGrid(seed),
+    gridRows: MAP_ROWS,
+    gridCols: MAP_COLS,
+    playerRow: start.row,
+    playerCol: start.col,
+    playerDirection: 'down' as Direction,
+    showDialog: false,
+    mapSeed: seed,
+  };
+}
+
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      money: 100,
-      totalHarvests: 0,
-      treesPlanted: 0,
-      grid: createInitialGrid(),
-      gridRows: MAP_ROWS,
-      gridCols: MAP_COLS,
-      playerRow: 12,
-      playerCol: 6,
-      playerDirection: 'down' as Direction,
-      showActionPanel: false,
+      ...freshState(),
 
       plantTree: (row, col, treeType) => {
         const state = get();
@@ -183,11 +199,11 @@ export const useGameStore = create<GameState>()(
         if (!species) return;
 
         const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        // Tree stays! Just collect nuts and start regrowth timer
         newGrid[row][col] = {
-          id: tile.id,
-          terrain: tile.terrain,
-          state: 'empty',
-          locked: false,
+          ...tile,
+          state: 'growing',
+          lastHarvestedAt: Date.now(),
         };
 
         set({
@@ -204,7 +220,6 @@ export const useGameStore = create<GameState>()(
         const newRow = state.playerRow + dr;
         const newCol = state.playerCol + dc;
 
-        // Bounds check
         if (newRow < 0 || newRow >= state.gridRows || newCol < 0 || newCol >= state.gridCols) {
           set({ playerDirection: direction });
           return;
@@ -216,11 +231,11 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        set({ playerRow: newRow, playerCol: newCol, playerDirection: direction, showActionPanel: false });
+        set({ playerRow: newRow, playerCol: newCol, playerDirection: direction, showDialog: false });
       },
 
-      toggleActionPanel: () => {
-        set((state) => ({ showActionPanel: !state.showActionPanel }));
+      toggleDialog: () => {
+        set((state) => ({ showDialog: !state.showDialog }));
       },
 
       tick: () => {
@@ -236,7 +251,7 @@ export const useGameStore = create<GameState>()(
                 return { ...tile, state: 'empty' as TileState, clearingAt: undefined };
               }
             }
-            // Check growth completion
+            // Check initial growth completion (planted → harvestable)
             if (tile.state === 'planted' && tile.treeType && tile.plantedAt) {
               const species = TREE_SPECIES[tile.treeType];
               if (species) {
@@ -244,6 +259,17 @@ export const useGameStore = create<GameState>()(
                 if (elapsed >= species.growTime) {
                   changed = true;
                   return { ...tile, state: 'harvestable' as TileState };
+                }
+              }
+            }
+            // Check nut regrowth (growing → harvestable)
+            if (tile.state === 'growing' && tile.treeType && tile.lastHarvestedAt) {
+              const species = TREE_SPECIES[tile.treeType];
+              if (species) {
+                const elapsed = (Date.now() - tile.lastHarvestedAt) / 1000;
+                if (elapsed >= species.harvestTime) {
+                  changed = true;
+                  return { ...tile, state: 'harvestable' as TileState, lastHarvestedAt: undefined };
                 }
               }
             }
@@ -265,38 +291,15 @@ export const useGameStore = create<GameState>()(
       },
 
       resetGame: () => {
-        set({
-          money: 100,
-          totalHarvests: 0,
-          treesPlanted: 0,
-          grid: createInitialGrid(),
-          gridRows: MAP_ROWS,
-          gridCols: MAP_COLS,
-          playerRow: 12,
-          playerCol: 6,
-          playerDirection: 'down' as Direction,
-          showActionPanel: false,
-        });
+        set(freshState());
       },
     }),
     {
       name: 'hazelnut-farm-save',
       version: SAVE_VERSION,
       migrate: (_persisted, version) => {
-        // Any old saves get wiped to fresh state
         if (version < SAVE_VERSION) {
-          return {
-            money: 100,
-            totalHarvests: 0,
-            treesPlanted: 0,
-            grid: createInitialGrid(),
-            gridRows: MAP_ROWS,
-            gridCols: MAP_COLS,
-            playerRow: 12,
-            playerCol: 6,
-            playerDirection: 'down',
-            showActionPanel: false,
-          };
+          return freshState();
         }
         return _persisted as object;
       },

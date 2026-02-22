@@ -20,6 +20,18 @@ export function usePlayerInput() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const state = useGameStore.getState();
+
+      // When dialog is open, only handle Escape (dialog handles arrow/enter itself)
+      if (state.showDialog) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          useGameStore.setState({ showDialog: false });
+        }
+        return;
+      }
+
+      // Movement
       const direction = KEY_TO_DIRECTION[e.key];
       if (direction) {
         e.preventDefault();
@@ -30,18 +42,15 @@ export function usePlayerInput() {
         return;
       }
 
+      // Open dialog
       if (e.key === 'Enter') {
         e.preventDefault();
-        useGameStore.getState().toggleActionPanel();
+        useGameStore.getState().toggleDialog();
         return;
       }
 
       if (e.key === 'Escape') {
         e.preventDefault();
-        const state = useGameStore.getState();
-        if (state.showActionPanel) {
-          useGameStore.setState({ showActionPanel: false });
-        }
         return;
       }
     };

@@ -1,100 +1,99 @@
-// 40x30 map template
-// Each cell: [terrain, locked]
-// Terrain: 'g' = grass, 'f' = forest, 'r' = river
-// Locked: 0 = unlocked, 1 = locked
+// Procedural map generator with seeded randomness
+// Produces a different map each time based on seed
 
-type CellDef = [terrain: 'g' | 'f' | 'r', locked: 0 | 1];
+export type CellDef = [terrain: 'g' | 'f' | 'r', locked: 0 | 1];
 
-// Helper shortcuts used in buildMap
-const g1: CellDef = ['g', 1];
-const f1: CellDef = ['f', 1];
-const rv: CellDef = ['r', 0];
+export const MAP_ROWS = 20;
+export const MAP_COLS = 25;
 
-// 30 rows x 40 cols
-export const MAP_ROWS = 30;
-export const MAP_COLS = 40;
+// Simple seeded PRNG (mulberry32)
+function createRng(seed: number) {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
-export const MAP_TEMPLATE: CellDef[][] = buildMap();
+export function generateMap(seed: number): CellDef[][] {
+  const rng = createRng(seed);
+  const g1: CellDef = ['g', 1];
 
-function buildMap(): CellDef[][] {
-  // Start with everything locked grass
+  // Start with all locked grass
   const map: CellDef[][] = Array.from({ length: MAP_ROWS }, () =>
     Array.from({ length: MAP_COLS }, () => [...g1] as CellDef)
   );
 
-  // Place forests (locked) scattered across the map
-  const forestPatches: [r: number, c: number, w: number, h: number][] = [
-    // Starting region forests
-    [10, 4, 2, 3],
-    [14, 2, 3, 2],
-    // Region 2 (east of first river) forests
-    [8, 15, 3, 2],
-    [12, 18, 2, 3],
-    [16, 14, 2, 2],
-    // Region 3 (south of second river) forests
-    [22, 5, 3, 2],
-    [24, 10, 2, 3],
-    [23, 2, 2, 2],
-    // Region 4 (far east) forests
-    [6, 28, 3, 3],
-    [10, 30, 2, 2],
-    [14, 27, 2, 3],
-    [18, 32, 3, 2],
-    // Region 5 (far south-east) forests
-    [22, 28, 2, 3],
-    [25, 32, 3, 2],
-    [24, 25, 2, 2],
-    // Extra forests
-    [3, 3, 2, 2],
-    [4, 8, 2, 2],
-    [17, 8, 2, 2],
-  ];
+  // --- Place diagonal rivers ---
+  // River 1: diagonal from upper-left area to lower-right, separating start region
+  const river1StartCol = 7 + Math.floor(rng() * 3); // col 7-9
+  const river1Slope = 0.4 + rng() * 0.4; // gentle diagonal
+  const river1Dir = rng() > 0.5 ? 1 : -1; // left-leaning or right-leaning
 
-  for (const [r, c, w, h] of forestPatches) {
-    for (let dr = 0; dr < h; dr++) {
-      for (let dc = 0; dc < w; dc++) {
-        if (r + dr < MAP_ROWS && c + dc < MAP_COLS) {
-          map[r + dr][c + dc] = [...f1];
+  for (let r = 0; r < MAP_ROWS; r++) {
+    const baseCol = river1StartCol + Math.floor((r - MAP_ROWS / 2) * river1Slope * river1Dir);
+    const col = Math.max(0, Math.min(MAP_COLS - 1, baseCol));
+    if (col >= 0 && col < MAP_COLS) {
+      map[r][col] = ['r', 0];
+      // Add width variation
+      if (rng() > 0.4 && col + 1 < MAP_COLS) {
+        map[r][col + 1] = ['r', 0];
+      }
+    }
+  }
+
+  // River 2: roughly horizontal/diagonal, crossing the map
+  const river2StartRow = 12 + Math.floor(rng() * 4); // row 12-15
+  const river2Slope = 0.2 + rng() * 0.3;
+  const river2Dir = rng() > 0.5 ? 1 : -1;
+
+  for (let c = 0; c < MAP_COLS; c++) {
+    const baseRow = river2StartRow + Math.floor((c - MAP_COLS / 2) * river2Slope * river2Dir);
+    const row = Math.max(0, Math.min(MAP_ROWS - 1, baseRow));
+    if (row >= 0 && row < MAP_ROWS) {
+      map[row][c] = ['r', 0];
+      if (rng() > 0.5 && row + 1 < MAP_ROWS) {
+        map[row + 1][c] = ['r', 0];
+      }
+    }
+  }
+
+  // --- Scatter forest patches ---
+  const numForests = 12 + Math.floor(rng() * 8);
+  for (let i = 0; i < numForests; i++) {
+    const fr = Math.floor(rng() * MAP_ROWS);
+    const fc = Math.floor(rng() * MAP_COLS);
+    const fw = 1 + Math.floor(rng() * 3);
+    const fh = 1 + Math.floor(rng() * 3);
+    for (let dr = 0; dr < fh; dr++) {
+      for (let dc = 0; dc < fw; dc++) {
+        const rr = fr + dr;
+        const cc = fc + dc;
+        if (rr < MAP_ROWS && cc < MAP_COLS && map[rr][cc][0] !== 'r') {
+          map[rr][cc] = ['f', 1];
         }
       }
     }
   }
 
-  // River 1: vertical river from top to row ~20 at col 11-12
-  // Separates starting region (west) from region 2 (east)
-  for (let r = 0; r < 21; r++) {
-    map[r][11] = [...rv];
-    if (r < 18) map[r][12] = [...rv]; // slightly narrower at bottom
-  }
-  // River curves east at bottom
-  map[20][12] = [...rv];
-  map[20][13] = [...rv];
-
-  // River 2: horizontal river from col 0 to col ~25 at row 19-20
-  // Separates northern regions from southern regions
-  for (let c = 0; c < 24; c++) {
-    map[19][c] = [...rv];
-    if (c > 3 && c < 20) map[20][c] = [...rv]; // narrower at edges
-  }
-
-  // River 3: vertical river at col 24-25, from row 0 down to row 30
-  // Separates western regions from far-east regions
-  for (let r = 0; r < MAP_ROWS; r++) {
-    map[r][24] = [...rv];
-    if (r > 5 && r < 25) map[r][25] = [...rv];
-  }
-
-  // Starting region: ~6x5 unlocked area around (12, 5)
-  for (let r = 10; r < 16; r++) {
-    for (let c = 3; c < 10; c++) {
+  // --- Starting region: ~5x5 unlocked area near center-left ---
+  const startRow = Math.floor(MAP_ROWS / 2) - 2;
+  const startCol = 2;
+  for (let r = startRow; r < startRow + 5 && r < MAP_ROWS; r++) {
+    for (let c = startCol; c < startCol + 6 && c < MAP_COLS; c++) {
       if (map[r][c][0] !== 'r') {
-        // Keep forest terrain but make unlocked, grass stays grass but unlocked
-        map[r][c] = [map[r][c][0], 0] as CellDef;
+        map[r][c] = [map[r][c][0], 0];
       }
     }
   }
 
   return map;
+}
+
+export function getPlayerStart(): { row: number; col: number } {
+  return { row: Math.floor(MAP_ROWS / 2), col: 4 };
 }
 
 export function getTerrainType(code: 'g' | 'f' | 'r'): 'grass' | 'forest' | 'river' {

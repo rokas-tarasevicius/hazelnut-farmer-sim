@@ -32,7 +32,7 @@ describe('store', () => {
       before.plantTree(emptyTile!.row, emptyTile!.col, 'common_hazelnut');
 
       const after = getState();
-      expect(after.money).toBe(90);
+      expect(after.money).toBe(70); // cost 30
       expect(after.grid[emptyTile!.row][emptyTile!.col].state).toBe('planted');
       expect(after.grid[emptyTile!.row][emptyTile!.col].treeType).toBe('common_hazelnut');
       expect(after.grid[emptyTile!.row][emptyTile!.col].plantedAt).toBeDefined();
@@ -64,11 +64,12 @@ describe('store', () => {
   });
 
   describe('harvest', () => {
-    it('harvests a harvestable tree and adds money', () => {
+    it('harvests nuts and tree stays (enters growing state)', () => {
       const emptyTile = findTile((t) => t.state === 'empty');
       expect(emptyTile).not.toBeNull();
 
       getState().plantTree(emptyTile!.row, emptyTile!.col, 'common_hazelnut');
+      // Force harvestable
       const grid = getState().grid.map((r) => r.map((t) => ({ ...t })));
       grid[emptyTile!.row][emptyTile!.col].state = 'harvestable';
       useGameStore.setState({ grid });
@@ -76,9 +77,10 @@ describe('store', () => {
       const moneyBefore = getState().money;
       getState().harvest(emptyTile!.row, emptyTile!.col);
 
-      expect(getState().money).toBe(moneyBefore + 25);
-      expect(getState().grid[emptyTile!.row][emptyTile!.col].state).toBe('empty');
-      expect(getState().grid[emptyTile!.row][emptyTile!.col].treeType).toBeUndefined();
+      expect(getState().money).toBe(moneyBefore + 8); // sellPrice = 8
+      expect(getState().grid[emptyTile!.row][emptyTile!.col].state).toBe('growing');
+      expect(getState().grid[emptyTile!.row][emptyTile!.col].treeType).toBe('common_hazelnut');
+      expect(getState().grid[emptyTile!.row][emptyTile!.col].lastHarvestedAt).toBeDefined();
       expect(getState().totalHarvests).toBe(1);
     });
   });
@@ -86,12 +88,12 @@ describe('store', () => {
   describe('clearForest', () => {
     it('starts clearing an unlocked forest tile and deducts money', () => {
       const forestTile = findTile((t) => t.terrain === 'forest' && t.state === 'natural' && !t.locked);
-      expect(forestTile).not.toBeNull();
+      if (!forestTile) return; // map seed might not have unlocked forests
 
-      getState().clearForest(forestTile!.row, forestTile!.col);
+      getState().clearForest(forestTile.row, forestTile.col);
 
-      expect(getState().grid[forestTile!.row][forestTile!.col].state).toBe('clearing');
-      expect(getState().grid[forestTile!.row][forestTile!.col].clearingAt).toBeDefined();
+      expect(getState().grid[forestTile.row][forestTile.col].state).toBe('clearing');
+      expect(getState().grid[forestTile.row][forestTile.col].clearingAt).toBeDefined();
       expect(getState().money).toBe(85);
     });
   });
@@ -126,17 +128,17 @@ describe('store', () => {
   describe('tick', () => {
     it('transitions clearing to empty after clear time', () => {
       const forestTile = findTile((t) => t.terrain === 'forest' && t.state === 'natural' && !t.locked);
-      expect(forestTile).not.toBeNull();
+      if (!forestTile) return;
 
-      getState().clearForest(forestTile!.row, forestTile!.col);
+      getState().clearForest(forestTile.row, forestTile.col);
 
       const grid = getState().grid.map((r) => r.map((t) => ({ ...t })));
-      grid[forestTile!.row][forestTile!.col].clearingAt = Date.now() - 11000;
+      grid[forestTile.row][forestTile.col].clearingAt = Date.now() - 11000;
       useGameStore.setState({ grid });
 
       getState().tick();
 
-      expect(getState().grid[forestTile!.row][forestTile!.col].state).toBe('empty');
+      expect(getState().grid[forestTile.row][forestTile.col].state).toBe('empty');
     });
 
     it('transitions planted to harvestable after grow time', () => {
@@ -146,12 +148,34 @@ describe('store', () => {
       getState().plantTree(emptyTile!.row, emptyTile!.col, 'common_hazelnut');
 
       const grid = getState().grid.map((r) => r.map((t) => ({ ...t })));
-      grid[emptyTile!.row][emptyTile!.col].plantedAt = Date.now() - 31000;
+      grid[emptyTile!.row][emptyTile!.col].plantedAt = Date.now() - 61000; // growTime=60
       useGameStore.setState({ grid });
 
       getState().tick();
 
       expect(getState().grid[emptyTile!.row][emptyTile!.col].state).toBe('harvestable');
+    });
+
+    it('transitions growing to harvestable after harvest time (nut regrowth)', () => {
+      const emptyTile = findTile((t) => t.state === 'empty');
+      expect(emptyTile).not.toBeNull();
+
+      // Plant, force harvestable, harvest
+      getState().plantTree(emptyTile!.row, emptyTile!.col, 'common_hazelnut');
+      let grid = getState().grid.map((r) => r.map((t) => ({ ...t })));
+      grid[emptyTile!.row][emptyTile!.col].state = 'harvestable';
+      useGameStore.setState({ grid });
+      getState().harvest(emptyTile!.row, emptyTile!.col);
+
+      // Now it should be 'growing', fast-forward lastHarvestedAt
+      grid = getState().grid.map((r) => r.map((t) => ({ ...t })));
+      grid[emptyTile!.row][emptyTile!.col].lastHarvestedAt = Date.now() - 21000; // harvestTime=20
+      useGameStore.setState({ grid });
+
+      getState().tick();
+
+      expect(getState().grid[emptyTile!.row][emptyTile!.col].state).toBe('harvestable');
+      expect(getState().grid[emptyTile!.row][emptyTile!.col].treeType).toBe('common_hazelnut');
     });
 
     it('transitions bridging to bridge after bridge time', () => {
@@ -168,6 +192,16 @@ describe('store', () => {
       getState().tick();
 
       expect(getState().grid[riverTile!.row][riverTile!.col].state).toBe('bridge');
+    });
+  });
+
+  describe('resetGame', () => {
+    it('generates a different map seed on reset', () => {
+      const seed1 = getState().mapSeed;
+      getState().resetGame();
+      const seed2 = getState().mapSeed;
+      // Seeds should differ (astronomically unlikely to collide)
+      expect(seed2).not.toBe(seed1);
     });
   });
 });

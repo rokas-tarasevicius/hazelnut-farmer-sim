@@ -33,6 +33,11 @@ function getSpriteUrl(tile: TileData): string | undefined {
     }
   }
 
+  // Growing = tree is there but regrowing nuts — show mature stage
+  if (tile.state === 'growing' && tile.treeType) {
+    return getTreeSpritePath(tile.treeType, 'mature');
+  }
+
   if (tile.state === 'harvestable' && tile.treeType) {
     return getTreeSpritePath(tile.treeType, 'harvestable');
   }
@@ -53,6 +58,12 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
     if (species) {
       progress = getGrowthProgress(tile.plantedAt, species.growTime);
     }
+  } else if (tile.state === 'growing' && tile.treeType && tile.lastHarvestedAt) {
+    const species = TREE_SPECIES[tile.treeType];
+    if (species) {
+      const elapsed = (Date.now() - tile.lastHarvestedAt) / 1000;
+      progress = Math.min(elapsed / species.harvestTime, 1);
+    }
   } else if (tile.state === 'clearing' && tile.clearingAt) {
     progress = Math.min((Date.now() - tile.clearingAt) / (10 * 1000), 1);
   } else if (tile.state === 'bridging' && tile.bridgingAt) {
@@ -60,7 +71,9 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
   }
 
   const stateClass = tile.locked ? styles.locked :
-    (tile.state === 'bridging' ? styles.clearing : styles[tile.state]) || '';
+    (tile.state === 'bridging' ? styles.clearing :
+      tile.state === 'growing' ? styles.planted :
+        styles[tile.state]) || '';
   const highlightClass = isPlayerHere ? styles.playerHighlight : '';
 
   return (
