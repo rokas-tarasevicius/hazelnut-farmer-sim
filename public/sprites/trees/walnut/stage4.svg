@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Soil -->
+  <rect x="4" y="15" width="8" height="1" fill="#8B7355"/>
+  <!-- Thick dark trunk -->
+  <rect x="7" y="7" width="2" height="8" fill="#3a2210"/>
+  <rect x="6" y="13" width="1" height="2" fill="#4a3218"/>
+  <rect x="9" y="13" width="1" height="2" fill="#4a3218"/>
+  <!-- Trunk detail -->
+  <rect x="7" y="9" width="1" height="1" fill="#654321"/>
+  <rect x="8" y="11" width="1" height="1" fill="#654321"/>
+  <!-- Dense tall canopy - outer layer -->
+  <rect x="5" y="1" width="5" height="1" fill="#1a4a0a"/>
+  <rect x="4" y="2" width="7" height="1" fill="#1a4a0a"/>
+  <rect x="3" y="3" width="9" height="1" fill="#2a5a1a"/>
+  <rect x="3" y="4" width="10" height="1" fill="#2a5a1a"/>
+  <rect x="3" y="5" width="10" height="1" fill="#1a4a0a"/>
+  <rect x="4" y="6" width="8" height="1" fill="#1a4a0a"/>
+  <rect x="5" y="7" width="2" height="1" fill="#1a4a0a"/>
+  <rect x="10" y="7" width="1" height="1" fill="#1a4a0a"/>
+  <!-- Canopy highlights -->
+  <rect x="5" y="2" width="2" height="1" fill="#2a5a1a"/>
+  <rect x="4" y="3" width="3" height="1" fill="#3a6a2a"/>
+  <rect x="5" y="4" width="3" height="1" fill="#3a6a2a"/>
+  <rect x="4" y="5" width="2" height="1" fill="#2a5a1a"/>
+  <!-- Canopy deep shadow -->
+  <rect x="10" y="4" width="2" height="1" fill="#1a4a0a"/>
+  <rect x="10" y="5" width="2" height="1" fill="#1a4a0a"/>
+  <rect x="10" y="6" width="1" height="1" fill="#1a4a0a"/>
+</svg>

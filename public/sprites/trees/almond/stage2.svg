@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Soil -->
+  <rect x="4" y="14" width="8" height="1" fill="#8B7355"/>
+  <rect x="3" y="15" width="10" height="1" fill="#8B7355"/>
+  <!-- Thin stem -->
+  <rect x="7" y="8" width="1" height="6" fill="#8B6914"/>
+  <!-- Lower left leaf pair -->
+  <rect x="5" y="10" width="2" height="1" fill="#7ac060"/>
+  <rect x="4" y="9" width="1" height="1" fill="#8ad070"/>
+  <!-- Lower right leaf pair -->
+  <rect x="9" y="10" width="2" height="1" fill="#7ac060"/>
+  <rect x="11" y="9" width="1" height="1" fill="#8ad070"/>
+  <!-- Upper left leaf -->
+  <rect x="5" y="7" width="2" height="1" fill="#7ac060"/>
+  <rect x="4" y="6" width="1" height="1" fill="#8ad070"/>
+  <!-- Upper right leaf -->
+  <rect x="9" y="7" width="2" height="1" fill="#7ac060"/>
+  <rect x="11" y="6" width="1" height="1" fill="#8ad070"/>
+  <!-- Top leaves -->
+  <rect x="6" y="5" width="3" height="1" fill="#7ac060"/>
+  <rect x="7" y="4" width="1" height="1" fill="#8ad070"/>
+  <!-- Leaf accents -->
+  <rect x="6" y="6" width="1" height="1" fill="#6ab050"/>
+  <rect x="9" y="8" width="1" height="1" fill="#6ab050"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Ground -->
+  <rect width="16" height="16" fill="#5a8a3c"/>
+  <!-- Soil mound -->
+  <rect x="5" y="12" width="6" height="2" fill="#6b5030"/>
+  <rect x="6" y="11" width="4" height="1" fill="#6b5030"/>
+  <!-- Tiny stem -->
+  <rect x="8" y="8" width="1" height="3" fill="#4a7a2e"/>
+  <!-- Two small leaves -->
+  <rect x="7" y="7" width="1" height="1" fill="#6aaa3e"/>
+  <rect x="9" y="7" width="1" height="1" fill="#6aaa3e"/>
+  <rect x="6" y="6" width="1" height="1" fill="#7ab55a"/>
+  <rect x="10" y="6" width="1" height="1" fill="#7ab55a"/>
+</svg>

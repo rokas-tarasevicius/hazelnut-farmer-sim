@@ -1,0 +1,56 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #2d1b0e;
+  --color-bg-light: #3e2a18;
+  --color-text: #f5e6d0;
+  --color-gold: #d4a642;
+  --color-green: #4a7c3f;
+  --color-green-light: #6ba35e;
+  --color-red: #c0392b;
+  --tile-size: 64px;
+  --font-pixel: 'Courier New', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-pixel);
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+button {
+  font-family: var(--font-pixel);
+  cursor: pointer;
+  border: 2px solid var(--color-gold);
+  background: var(--color-bg-light);
+  color: var(--color-text);
+  padding: 6px 12px;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+button:hover {
+  background: var(--color-gold);
+  color: var(--color-bg);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}

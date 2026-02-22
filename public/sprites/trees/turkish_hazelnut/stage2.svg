@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Soil mound -->
+  <rect x="5" y="14" width="6" height="1" fill="#8B7355"/>
+  <rect x="4" y="15" width="8" height="1" fill="#8B7355"/>
+  <!-- Stem -->
+  <rect x="7" y="10" width="1" height="4" fill="#5a3a1a"/>
+  <!-- Wider leaf cluster left -->
+  <rect x="4" y="8" width="1" height="1" fill="#2d6a1e"/>
+  <rect x="5" y="7" width="1" height="2" fill="#3d7a2e"/>
+  <rect x="6" y="7" width="1" height="2" fill="#2d6a1e"/>
+  <!-- Center leaves -->
+  <rect x="7" y="6" width="1" height="4" fill="#3d7a2e"/>
+  <rect x="7" y="5" width="1" height="1" fill="#2d6a1e"/>
+  <!-- Wider leaf cluster right -->
+  <rect x="8" y="7" width="1" height="2" fill="#2d6a1e"/>
+  <rect x="9" y="7" width="1" height="2" fill="#3d7a2e"/>
+  <rect x="10" y="8" width="1" height="1" fill="#2d6a1e"/>
+</svg>

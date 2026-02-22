@@ -1,0 +1,66 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--color-bg-light);
+  border-bottom: 3px solid var(--color-gold);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-gold);
+  letter-spacing: 1px;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.statLabel {
+  opacity: 0.7;
+}
+
+.statValue {
+  color: var(--color-gold);
+  font-weight: bold;
+}
+
+.money {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.hints {
+  font-size: 11px;
+  opacity: 0.5;
+  border: 1px solid #555;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.resetBtn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-color: var(--color-red);
+  opacity: 0.6;
+}
+
+.resetBtn:hover {
+  background: var(--color-red);
+  opacity: 1;
+}

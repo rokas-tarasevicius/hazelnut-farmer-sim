@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Soil mound -->
+  <rect x="5" y="13" width="6" height="1" fill="#8B7355"/>
+  <rect x="4" y="14" width="8" height="1" fill="#8B7355"/>
+  <rect x="3" y="15" width="10" height="1" fill="#8B7355"/>
+  <!-- Stem - darker green for walnut -->
+  <rect x="7" y="10" width="1" height="3" fill="#2a5a1a"/>
+  <!-- Sprout leaf left -->
+  <rect x="6" y="9" width="1" height="1" fill="#3a6a2a"/>
+  <rect x="5" y="8" width="1" height="1" fill="#3a6a2a"/>
+  <!-- Sprout leaf right -->
+  <rect x="8" y="9" width="1" height="1" fill="#3a6a2a"/>
+  <rect x="9" y="8" width="1" height="1" fill="#3a6a2a"/>
+  <!-- Sprout tip -->
+  <rect x="7" y="8" width="1" height="2" fill="#2a5a1a"/>
+  <rect x="7" y="7" width="1" height="1" fill="#3a6a2a"/>
+</svg>

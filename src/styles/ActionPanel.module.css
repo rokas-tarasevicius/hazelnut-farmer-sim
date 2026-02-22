@@ -1,0 +1,115 @@
+.panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-bg-light);
+  border-top: 3px solid var(--color-gold);
+  padding: 12px 20px;
+  z-index: 50;
+  animation: slideUp 0.15s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--color-gold);
+}
+
+.closeBtn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-color: #555;
+  opacity: 0.7;
+}
+
+.description {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-bottom: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 2px solid #555;
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 180px;
+}
+
+.action:hover {
+  border-color: var(--color-gold);
+  background: var(--color-bg-light);
+}
+
+.action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action:disabled:hover {
+  border-color: #555;
+  background: var(--color-bg);
+}
+
+.actionKey {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--color-gold);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+.actionInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.actionLabel {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.actionDesc {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.actionCost {
+  font-size: 14px;
+  color: var(--color-gold);
+  white-space: nowrap;
+  margin-left: auto;
+}

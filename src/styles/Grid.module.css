@@ -1,0 +1,6 @@
+.grid {
+  display: grid;
+  gap: 4px;
+  position: relative;
+  background: var(--color-bg-light);
+}

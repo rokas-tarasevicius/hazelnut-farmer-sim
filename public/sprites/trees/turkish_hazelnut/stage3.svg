@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Soil -->
+  <rect x="5" y="14" width="6" height="1" fill="#8B7355"/>
+  <rect x="4" y="15" width="8" height="1" fill="#8B7355"/>
+  <!-- Trunk -->
+  <rect x="7" y="10" width="1" height="4" fill="#5a3a1a"/>
+  <rect x="7" y="9" width="1" height="1" fill="#A0522D"/>
+  <!-- Wide oval canopy - bottom row -->
+  <rect x="3" y="8" width="9" height="1" fill="#2d6a1e"/>
+  <!-- Middle rows -->
+  <rect x="3" y="7" width="10" height="1" fill="#3d7a2e"/>
+  <rect x="3" y="6" width="10" height="1" fill="#2d6a1e"/>
+  <rect x="4" y="5" width="8" height="1" fill="#3d7a2e"/>
+  <!-- Top rows -->
+  <rect x="5" y="4" width="6" height="1" fill="#2d6a1e"/>
+  <rect x="6" y="3" width="4" height="1" fill="#1d5a0e"/>
+</svg>
