@@ -5,13 +5,6 @@ import styles from '../styles/Drone.module.css';
 // Same cell size as Player.tsx — 64px tile + 4px gap = 68px per cell
 const CELL_SIZE = 68;
 
-/**
- * Custom hook that returns the current time, updated every second.
- * We use this instead of calling Date.now() directly in the render body
- * because React's linter treats Date.now() as an "impure function call"
- * (it returns different results each time). By putting it in a hook with
- * useEffect + setInterval, React knows it's a side effect and is OK with it.
- */
 function useNow() {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
@@ -31,23 +24,26 @@ export function Drones() {
         const x = drone.col * CELL_SIZE;
         const y = drone.row * CELL_SIZE;
 
-        // Calculate harvest progress (0 to 1) while the drone is harvesting
-        let harvestProgress: number | undefined;
+        let taskProgress: number | undefined;
         if (drone.state === 'harvesting' && drone.harvestingAt !== null) {
-          harvestProgress = Math.min(
+          taskProgress = Math.min(
             (now - drone.harvestingAt) / (DRONE_HARVEST_TIME * 1000),
             1
           );
         }
 
-        // Pick the right CSS class based on state:
-        // - 'moving' → bobbing animation
-        // - 'harvesting' → harvesting animation
-        // - 'idle' → static
         const stateClass =
           drone.state === 'moving' ? styles.moving :
           drone.state === 'harvesting' ? styles.harvesting :
           '';
+
+        const spriteUrl = drone.type === 'water'
+          ? '/sprites/drone_water.svg'
+          : '/sprites/drone_harvest.svg';
+
+        const fillClass = drone.type === 'water'
+          ? styles.progressFillWater
+          : styles.progressFill;
 
         return (
           <div
@@ -55,12 +51,12 @@ export function Drones() {
             className={`${styles.drone} ${stateClass}`}
             style={{ transform: `translate(${x}px, ${y}px)` }}
           >
-            <span className={styles.icon}>🤖</span>
-            {harvestProgress !== undefined && (
+            <img src={spriteUrl} alt={`${drone.type} drone`} className={styles.icon} />
+            {taskProgress !== undefined && (
               <div className={styles.progressBar}>
                 <div
-                  className={styles.progressFill}
-                  style={{ width: `${harvestProgress * 100}%` }}
+                  className={fillClass}
+                  style={{ width: `${taskProgress * 100}%` }}
                 />
               </div>
             )}

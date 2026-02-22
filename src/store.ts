@@ -18,10 +18,6 @@ export interface Tile {
   bridgingAt?: number;
   lastHarvestedAt?: number;
   isWatered?: boolean;
-  hasWateringDrone?: boolean;
-  wateringDroneAt?: number;
-  hasDrone?: boolean;
-  droneHarvestingAt?: number;
 }
 
 // --- Autonomous drone entities ---
@@ -31,13 +27,14 @@ export type DroneState = 'idle' | 'moving' | 'harvesting';
 
 export interface Drone {
   id: string;               // "drone-0", "drone-1", etc.
+  type: 'harvest' | 'water';
   row: number;              // current grid position (can fly over anything)
   col: number;
   state: DroneState;
   targetRow: number | null; // where the drone is heading
   targetCol: number | null;
-  harvestingAt: number | null; // timestamp when harvesting started
-  lastMoveAt: number;       // timestamp of last movement step (for 500ms cadence)
+  harvestingAt: number | null; // timestamp when harvesting/watering started
+  lastMoveAt: number;       // timestamp of last movement step
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
@@ -55,9 +52,8 @@ export interface GameState {
   showDialog: boolean;
   mapSeed: number;
   hasWateringCan: boolean;
-  drones: Drone[];          // autonomous flying drones
+  drones: Drone[];          // autonomous flying drones (harvest + water)
   nextDroneId: number;      // counter for generating unique drone IDs
-  wateringDroneInventory: number;
 
   plantTree: (row: number, col: number, treeType: string) => void;
   clearForest: (row: number, col: number) => void;
@@ -69,8 +65,6 @@ export interface GameState {
   buyDrone: () => void;
   buyWateringDrone: () => void;
   cutDownTree: (row: number, col: number) => void;
-  placeDrone: (row: number, col: number) => void;
-  placeWateringDrone: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -85,9 +79,9 @@ export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
 export const WATERING_DRONE_COST = 60;
 export const DRONE_COST = 50;
-export const DRONE_HARVEST_TIME = 5; // seconds drone takes to harvest
+export const DRONE_HARVEST_TIME = 2; // seconds drone takes to harvest/water
 
-const SAVE_VERSION = 8;
+const SAVE_VERSION = 10;
 
 const TREE_STATES = new Set<TileState>(['planted', 'growing', 'harvestable']);
 
@@ -140,7 +134,6 @@ function freshState() {
     hasWateringCan: false,
     drones: [],
     nextDroneId: 0,
-    wateringDroneInventory: 0,
   };
 }
 
@@ -227,7 +220,6 @@ export const useGameStore = create<GameState>()(
           state: 'growing',
           lastHarvestedAt: Date.now(),
           isWatered: false,
-          droneHarvestingAt: undefined,
         };
 
         set({
@@ -261,6 +253,7 @@ export const useGameStore = create<GameState>()(
         if (state.money < DRONE_COST) return;
         const newDrone: Drone = {
           id: `drone-${state.nextDroneId}`,
+          type: 'harvest',
           row: state.playerRow,
           col: state.playerCol,
           state: 'idle',
@@ -298,33 +291,22 @@ export const useGameStore = create<GameState>()(
       buyWateringDrone: () => {
         const state = get();
         if (state.money < WATERING_DRONE_COST) return;
-        set({ money: state.money - WATERING_DRONE_COST, wateringDroneInventory: state.wateringDroneInventory + 1 });
-      },
-
-      placeDrone: (row, col) => {
-        const state = get();
-        if (state.money < DRONE_COST) return;
-
-        const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
-
-        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = { ...tile, hasDrone: true };
-
-        set({ grid: newGrid, money: state.money - DRONE_COST });
-      },
-
-      placeWateringDrone: (row, col) => {
-        const state = get();
-        if (state.wateringDroneInventory < 1) return;
-
-        const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state) || tile.hasWateringDrone) return;
-
-        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = { ...tile, hasWateringDrone: true };
-
-        set({ grid: newGrid, wateringDroneInventory: state.wateringDroneInventory - 1 });
+        const newDrone: Drone = {
+          id: `drone-${state.nextDroneId}`,
+          type: 'water',
+          row: state.playerRow,
+          col: state.playerCol,
+          state: 'idle',
+          targetRow: null,
+          targetCol: null,
+          harvestingAt: null,
+          lastMoveAt: Date.now(),
+        };
+        set({
+          money: state.money - WATERING_DRONE_COST,
+          drones: [...state.drones, newDrone],
+          nextDroneId: state.nextDroneId + 1,
+        });
       },
 
       movePlayer: (direction) => {
@@ -359,25 +341,9 @@ export const useGameStore = create<GameState>()(
         let moneyEarned = 0;
         let harvestsGained = 0;
 
-        // --- Phase 1: Update tiles (growth, sprinklers, bridges) ---
+        // --- Phase 1: Update tiles (growth, bridges) ---
         const newGrid = state.grid.map((r) =>
           r.map((tile) => {
-            // Watering drone: auto-waters planted/growing trees after a delay (same delay as harvest drone)
-            if (tile.hasWateringDrone && (tile.state === 'planted' || tile.state === 'growing') && !tile.isWatered) {
-              if (!tile.wateringDroneAt) {
-                tile = { ...tile, wateringDroneAt: now };
-                gridChanged = true;
-              } else if ((now - tile.wateringDroneAt) / 1000 >= DRONE_HARVEST_TIME) {
-                tile = { ...tile, isWatered: true, wateringDroneAt: undefined };
-                gridChanged = true;
-              }
-            }
-            // Clear wateringDroneAt when no longer needed
-            if (tile.wateringDroneAt && (tile.isWatered || (tile.state !== 'planted' && tile.state !== 'growing'))) {
-              tile = { ...tile, wateringDroneAt: undefined };
-              gridChanged = true;
-            }
-
             // Watering speed boost: advance timers by an extra second each tick
             if (tile.isWatered) {
               if (tile.state === 'planted' && tile.plantedAt) {
@@ -428,32 +394,43 @@ export const useGameStore = create<GameState>()(
         );
 
         // --- Phase 2: Drone AI ---
-        // Each drone autonomously decides what to do every tick.
-        // A "claimed" set prevents two drones from targeting the same tree.
-        const claimedTiles = new Set<string>();
+        // Separate claimed sets prevent two drones of the same type targeting the same tile.
+        const claimedHarvestTiles = new Set<string>();
+        const claimedWaterTiles = new Set<string>();
         let dronesChanged = false;
 
-        // First pass: register tiles already claimed by drones that are moving or harvesting
+        // First pass: register already-claimed tiles
         for (const drone of state.drones) {
           if (drone.targetRow !== null && drone.targetCol !== null &&
               (drone.state === 'moving' || drone.state === 'harvesting')) {
-            claimedTiles.add(`${drone.targetRow}-${drone.targetCol}`);
+            if (drone.type === 'harvest') claimedHarvestTiles.add(`${drone.targetRow}-${drone.targetCol}`);
+            else claimedWaterTiles.add(`${drone.targetRow}-${drone.targetCol}`);
           }
         }
 
-        // Helper: find the nearest unclaimed harvestable tree to a position
         function findNearestHarvestable(fromRow: number, fromCol: number): { row: number; col: number } | null {
           let best: { row: number; col: number } | null = null;
           let bestDist = Infinity;
           for (let r = 0; r < newGrid.length; r++) {
             for (let c = 0; c < newGrid[r].length; c++) {
-              if (newGrid[r][c].state === 'harvestable' && !claimedTiles.has(`${r}-${c}`)) {
-                // Manhattan distance — add up horizontal + vertical steps
+              if (newGrid[r][c].state === 'harvestable' && !claimedHarvestTiles.has(`${r}-${c}`)) {
                 const dist = Math.abs(r - fromRow) + Math.abs(c - fromCol);
-                if (dist < bestDist) {
-                  bestDist = dist;
-                  best = { row: r, col: c };
-                }
+                if (dist < bestDist) { bestDist = dist; best = { row: r, col: c }; }
+              }
+            }
+          }
+          return best;
+        }
+
+        function findNearestUnwatered(fromRow: number, fromCol: number): { row: number; col: number } | null {
+          let best: { row: number; col: number } | null = null;
+          let bestDist = Infinity;
+          for (let r = 0; r < newGrid.length; r++) {
+            for (let c = 0; c < newGrid[r].length; c++) {
+              const t = newGrid[r][c];
+              if ((t.state === 'planted' || t.state === 'growing') && !t.isWatered && !claimedWaterTiles.has(`${r}-${c}`)) {
+                const dist = Math.abs(r - fromRow) + Math.abs(c - fromCol);
+                if (dist < bestDist) { bestDist = dist; best = { row: r, col: c }; }
               }
             }
           }
@@ -461,87 +438,81 @@ export const useGameStore = create<GameState>()(
         }
 
         const newDrones = state.drones.map((drone) => {
-          // Make a mutable copy of this drone
           let d = { ...drone };
+          const claimed = d.type === 'harvest' ? claimedHarvestTiles : claimedWaterTiles;
 
-          // If the drone's target tile is no longer harvestable (player grabbed it,
-          // tree was cut, etc.), reset drone to idle so it picks a new target.
+          // If the target is no longer valid, go idle
           if (d.targetRow !== null && d.targetCol !== null) {
             const targetTile = newGrid[d.targetRow]?.[d.targetCol];
-            if (!targetTile || targetTile.state !== 'harvestable') {
-              // Un-claim the old target
-              claimedTiles.delete(`${d.targetRow}-${d.targetCol}`);
+            const valid = d.type === 'harvest'
+              ? targetTile?.state === 'harvestable'
+              : (targetTile?.state === 'planted' || targetTile?.state === 'growing') && !targetTile.isWatered;
+            if (!valid) {
+              claimed.delete(`${d.targetRow}-${d.targetCol}`);
               d = { ...d, state: 'idle', targetRow: null, targetCol: null, harvestingAt: null };
               dronesChanged = true;
             }
           }
 
-          // STATE: idle → find a tree to go to
+          // STATE: idle → find a target
           if (d.state === 'idle') {
-            const target = findNearestHarvestable(d.row, d.col);
+            const target = d.type === 'harvest'
+              ? findNearestHarvestable(d.row, d.col)
+              : findNearestUnwatered(d.row, d.col);
             if (target) {
-              claimedTiles.add(`${target.row}-${target.col}`);
+              claimed.add(`${target.row}-${target.col}`);
               d = { ...d, state: 'moving', targetRow: target.row, targetCol: target.col, lastMoveAt: now };
               dronesChanged = true;
             }
           }
 
-          // STATE: moving → step toward the target (up to 2 steps per tick for 500ms cadence)
+          // STATE: moving → step toward target (up to 4 steps per tick at 250ms cadence)
           if (d.state === 'moving' && d.targetRow !== null && d.targetCol !== null) {
-            // Capture the target into local variables so TypeScript knows they're not null.
-            // (When we reassign `d` inside the loop, TS loses the narrowing from the if-check above.)
             const tRow = d.targetRow;
             const tCol = d.targetCol;
-
-            // Figure out how many steps the drone can take.
-            // With a 1-second tick and 500ms per step, a drone can take up to 2 steps.
-            const elapsed = now - d.lastMoveAt;
-            const steps = Math.min(Math.floor(elapsed / 500), 2);
+            const steps = Math.min(Math.floor((now - d.lastMoveAt) / 250), 4);
 
             for (let i = 0; i < steps; i++) {
               if (d.row === tRow && d.col === tCol) break;
-
-              // Move one tile closer (prefer row first, then column)
               if (d.row < tRow) d = { ...d, row: d.row + 1 };
               else if (d.row > tRow) d = { ...d, row: d.row - 1 };
               else if (d.col < tCol) d = { ...d, col: d.col + 1 };
               else if (d.col > tCol) d = { ...d, col: d.col - 1 };
               dronesChanged = true;
             }
+            if (steps > 0) d = { ...d, lastMoveAt: now };
 
-            if (steps > 0) {
-              d = { ...d, lastMoveAt: now };
-            }
-
-            // Arrived at the target?
             if (d.row === tRow && d.col === tCol) {
               d = { ...d, state: 'harvesting', harvestingAt: now };
               dronesChanged = true;
             }
           }
 
-          // STATE: harvesting → wait DRONE_HARVEST_TIME seconds, then collect
+          // STATE: harvesting → complete task after DRONE_HARVEST_TIME seconds
           if (d.state === 'harvesting' && d.harvestingAt !== null &&
               d.targetRow !== null && d.targetCol !== null) {
             if ((now - d.harvestingAt) / 1000 >= DRONE_HARVEST_TIME) {
               const tile = newGrid[d.targetRow]?.[d.targetCol];
-              if (tile && tile.state === 'harvestable' && tile.treeType) {
-                const species = TREE_SPECIES[tile.treeType];
-                if (species) {
-                  moneyEarned += species.sellPrice;
-                  harvestsGained += 1;
-                  // Transition the tile to 'growing' (same as manual harvest)
-                  newGrid[d.targetRow][d.targetCol] = {
-                    ...tile,
-                    state: 'growing' as TileState,
-                    lastHarvestedAt: now,
-                    isWatered: false,
-                  };
+              if (d.type === 'harvest') {
+                if (tile && tile.state === 'harvestable' && tile.treeType) {
+                  const species = TREE_SPECIES[tile.treeType];
+                  if (species) {
+                    moneyEarned += species.sellPrice;
+                    harvestsGained += 1;
+                    newGrid[d.targetRow][d.targetCol] = {
+                      ...tile, state: 'growing' as TileState, lastHarvestedAt: now, isWatered: false,
+                    };
+                    gridChanged = true;
+                  }
+                }
+              } else {
+                // water drone — set isWatered on the tile
+                if (tile && (tile.state === 'planted' || tile.state === 'growing') && !tile.isWatered) {
+                  newGrid[d.targetRow][d.targetCol] = { ...tile, isWatered: true };
                   gridChanged = true;
                 }
               }
-              // Un-claim and go idle to find the next tree
-              claimedTiles.delete(`${d.targetRow}-${d.targetCol}`);
+              claimed.delete(`${d.targetRow}-${d.targetCol}`);
               d = { ...d, state: 'idle', targetRow: null, targetCol: null, harvestingAt: null };
               dronesChanged = true;
             }
