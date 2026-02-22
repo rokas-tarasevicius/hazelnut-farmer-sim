@@ -20,6 +20,7 @@ export interface Tile {
   isWatered?: boolean;    // true = growing at 2x speed
   hasSprinkler?: boolean; // auto-reapplies isWatered every tick
   hasDrone?: boolean;     // auto-harvests nuts when ready
+  droneHarvestingAt?: number; // set when drone starts harvesting; cleared when done
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
@@ -37,6 +38,8 @@ export interface GameState {
   showDialog: boolean;
   mapSeed: number;
   hasWateringCan: boolean;
+  droneInventory: number;
+  sprinklerInventory: number;
 
   plantTree: (row: number, col: number, treeType: string) => void;
   clearForest: (row: number, col: number) => void;
@@ -45,9 +48,11 @@ export interface GameState {
   harvest: (row: number, col: number) => void;
   buyWateringCan: () => void;
   water: (row: number, col: number) => void;
+  buyDrone: () => void;
+  buySprinkler: () => void;
+  placeDrone: (row: number, col: number) => void;
   placeSprinkler: (row: number, col: number) => void;
   cutDownTree: (row: number, col: number) => void;
-  placeDrone: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -60,10 +65,13 @@ export const BRIDGE_COST = 100;
 export const BRIDGE_TIME = 20; // seconds
 export const CUT_DOWN_COST = 20;
 export const WATERING_CAN_COST = 40;
-export const SPRINKLER_COST = 200;
+export const SPRINKLER_COST = 75;
 export const DRONE_COST = 50;
+export const DRONE_HARVEST_TIME = 5; // seconds drone takes to harvest
 
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
+
+const TREE_STATES = new Set<TileState>(['planted', 'growing', 'harvestable']);
 
 export function getLandPrice(row: number, col: number): number {
   const start = getPlayerStart();
@@ -112,10 +120,10 @@ function freshState() {
     showDialog: false,
     mapSeed: seed,
     hasWateringCan: false,
+    droneInventory: 0,
+    sprinklerInventory: 0,
   };
 }
-
-const TREE_STATES = new Set<TileState>(['planted', 'growing', 'harvestable']);
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -153,11 +161,7 @@ export const useGameStore = create<GameState>()(
         if (!tile || tile.terrain !== 'forest' || tile.state !== 'natural' || tile.locked) return;
 
         const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = {
-          ...tile,
-          state: 'clearing',
-          clearingAt: Date.now(),
-        };
+        newGrid[row][col] = { ...tile, state: 'clearing', clearingAt: Date.now() };
 
         set({ grid: newGrid, money: state.money - CLEAR_COST });
       },
@@ -204,6 +208,7 @@ export const useGameStore = create<GameState>()(
           state: 'growing',
           lastHarvestedAt: Date.now(),
           isWatered: false, // cleared on harvest; sprinkler re-applies next tick
+          droneHarvestingAt: undefined,
         };
 
         set({
@@ -224,7 +229,7 @@ export const useGameStore = create<GameState>()(
         if (!state.hasWateringCan) return;
 
         const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state)) return;
+        if (!tile || !TREE_STATES.has(tile.state) || tile.isWatered) return;
 
         const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
         newGrid[row][col] = { ...tile, isWatered: true };
@@ -232,9 +237,34 @@ export const useGameStore = create<GameState>()(
         set({ grid: newGrid });
       },
 
-      placeSprinkler: (row, col) => {
+      buyDrone: () => {
+        const state = get();
+        if (state.money < DRONE_COST) return;
+        set({ money: state.money - DRONE_COST, droneInventory: state.droneInventory + 1 });
+      },
+
+      buySprinkler: () => {
         const state = get();
         if (state.money < SPRINKLER_COST) return;
+        set({ money: state.money - SPRINKLER_COST, sprinklerInventory: state.sprinklerInventory + 1 });
+      },
+
+      placeDrone: (row, col) => {
+        const state = get();
+        if (state.droneInventory < 1) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasDrone: true };
+
+        set({ grid: newGrid, droneInventory: state.droneInventory - 1 });
+      },
+
+      placeSprinkler: (row, col) => {
+        const state = get();
+        if (state.sprinklerInventory < 1) return;
 
         const tile = state.grid[row]?.[col];
         if (!tile || !TREE_STATES.has(tile.state) || tile.hasSprinkler) return;
@@ -242,7 +272,7 @@ export const useGameStore = create<GameState>()(
         const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
         newGrid[row][col] = { ...tile, hasSprinkler: true, isWatered: true };
 
-        set({ grid: newGrid, money: state.money - SPRINKLER_COST });
+        set({ grid: newGrid, sprinklerInventory: state.sprinklerInventory - 1 });
       },
 
       cutDownTree: (row, col) => {
@@ -261,19 +291,6 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
-      },
-
-      placeDrone: (row, col) => {
-        const state = get();
-        if (state.money < DRONE_COST) return;
-
-        const tile = state.grid[row]?.[col];
-        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
-
-        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
-        newGrid[row][col] = { ...tile, hasDrone: true };
-
-        set({ grid: newGrid, money: state.money - DRONE_COST });
       },
 
       movePlayer: (direction) => {
@@ -310,22 +327,13 @@ export const useGameStore = create<GameState>()(
 
         const newGrid = state.grid.map((r) =>
           r.map((tile) => {
-            // Sprinklers auto-water their tile
+            // Sprinklers keep tree watered automatically
             if (tile.hasSprinkler && TREE_STATES.has(tile.state) && !tile.isWatered) {
               tile = { ...tile, isWatered: true };
               changed = true;
             }
 
-            // Check clearing completion
-            if (tile.state === 'clearing' && tile.clearingAt) {
-              const elapsed = (now - tile.clearingAt) / 1000;
-              if (elapsed >= CLEAR_TIME) {
-                changed = true;
-                tile = { ...tile, state: 'empty' as TileState, clearingAt: undefined };
-              }
-            }
-
-            // Watering boost: subtract extra 1000ms from growth timers each tick
+            // Watering speed boost: advance timers by an extra second each tick
             if (tile.isWatered) {
               if (tile.state === 'planted' && tile.plantedAt) {
                 tile = { ...tile, plantedAt: tile.plantedAt - 1000 };
@@ -336,7 +344,15 @@ export const useGameStore = create<GameState>()(
               }
             }
 
-            // Check initial growth completion (planted → harvestable)
+            // Check clearing completion
+            if (tile.state === 'clearing' && tile.clearingAt) {
+              if ((now - tile.clearingAt) / 1000 >= CLEAR_TIME) {
+                changed = true;
+                tile = { ...tile, state: 'empty' as TileState, clearingAt: undefined };
+              }
+            }
+
+            // Check initial growth (planted → harvestable)
             if (tile.state === 'planted' && tile.treeType && tile.plantedAt) {
               const species = TREE_SPECIES[tile.treeType];
               if (species && (now - tile.plantedAt) / 1000 >= species.growTime) {
@@ -354,21 +370,39 @@ export const useGameStore = create<GameState>()(
               }
             }
 
-            // Drone: auto-harvest when nuts are ready
+            // Drone harvest logic (with delay)
             if (tile.hasDrone && tile.state === 'harvestable' && tile.treeType) {
-              const species = TREE_SPECIES[tile.treeType];
-              if (species) {
-                moneyEarned += species.sellPrice;
-                harvestsGained += 1;
+              if (!tile.droneHarvestingAt) {
+                // Start the harvest timer
+                tile = { ...tile, droneHarvestingAt: now };
                 changed = true;
-                return { ...tile, state: 'growing' as TileState, lastHarvestedAt: now };
+              } else if ((now - tile.droneHarvestingAt) / 1000 >= DRONE_HARVEST_TIME) {
+                // Harvest complete
+                const species = TREE_SPECIES[tile.treeType];
+                if (species) {
+                  moneyEarned += species.sellPrice;
+                  harvestsGained += 1;
+                  changed = true;
+                  return {
+                    ...tile,
+                    state: 'growing' as TileState,
+                    lastHarvestedAt: now,
+                    droneHarvestingAt: undefined,
+                    isWatered: false,
+                  };
+                }
               }
+            }
+
+            // Clear droneHarvestingAt if tile is no longer harvestable
+            if (tile.droneHarvestingAt && tile.state !== 'harvestable') {
+              tile = { ...tile, droneHarvestingAt: undefined };
+              changed = true;
             }
 
             // Check bridge completion
             if (tile.state === 'bridging' && tile.bridgingAt) {
-              const elapsed = (now - tile.bridgingAt) / 1000;
-              if (elapsed >= BRIDGE_TIME) {
+              if ((now - tile.bridgingAt) / 1000 >= BRIDGE_TIME) {
                 changed = true;
                 return { ...tile, state: 'bridge' as TileState, bridgingAt: undefined };
               }
