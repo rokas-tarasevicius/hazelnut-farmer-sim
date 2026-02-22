@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, SPRINKLER_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
@@ -18,17 +18,21 @@ export function ActionPanel() {
   const playerCol = useGameStore((s) => s.playerCol);
   const grid = useGameStore((s) => s.grid);
   const money = useGameStore((s) => s.money);
+  const hasWateringCan = useGameStore((s) => s.hasWateringCan);
   const plantTree = useGameStore((s) => s.plantTree);
   const clearForest = useGameStore((s) => s.clearForest);
   const buyLand = useGameStore((s) => s.buyLand);
   const buildBridge = useGameStore((s) => s.buildBridge);
   const harvest = useGameStore((s) => s.harvest);
+  const buyWateringCan = useGameStore((s) => s.buyWateringCan);
+  const water = useGameStore((s) => s.water);
+  const placeSprinkler = useGameStore((s) => s.placeSprinkler);
+  const cutDownTree = useGameStore((s) => s.cutDownTree);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const tile = grid[playerRow]?.[playerCol];
 
-  // Build actions list
   let title = '';
   let description = '';
   const actions: Action[] = [];
@@ -81,14 +85,35 @@ export function ActionPanel() {
         case 'harvestable': {
           const species = tile.treeType ? TREE_SPECIES[tile.treeType] : null;
           title = 'Ready to Harvest!';
-          description = species
-            ? `Your ${species.name} has ripe nuts.`
-            : 'Nuts are ready to pick.';
+          description = species ? `Your ${species.name} has ripe nuts.` : 'Nuts are ready to pick.';
           actions.push({
             label: 'Harvest Nuts',
             description: `Collect and sell — regrows in ${species?.harvestTime ?? '?'}s`,
             cost: `+$${species?.sellPrice ?? 0}`,
             handler: () => harvest(playerRow, playerCol),
+          });
+          if (hasWateringCan && !tile.isWatered) {
+            actions.push({
+              label: 'Water',
+              description: 'Doubles regrowth speed until next harvest',
+              handler: () => water(playerRow, playerCol),
+            });
+          }
+          if (!tile.hasSprinkler) {
+            actions.push({
+              label: 'Place Sprinkler',
+              description: 'Keeps this tree watered automatically',
+              cost: `$${SPRINKLER_COST}`,
+              disabled: money < SPRINKLER_COST,
+              handler: () => placeSprinkler(playerRow, playerCol),
+            });
+          }
+          actions.push({
+            label: 'Cut Down Tree',
+            description: 'Remove the tree entirely',
+            cost: `-$${CUT_DOWN_COST}`,
+            disabled: money < CUT_DOWN_COST,
+            handler: () => cutDownTree(playerRow, playerCol),
           });
           break;
         }
@@ -99,14 +124,60 @@ export function ActionPanel() {
             ? getGrowthStage(tile.plantedAt, species.growTime)
             : 'sprout';
           title = `${species?.name ?? 'Tree'} Growing`;
-          description = `Stage: ${stage}. First harvest once mature.`;
+          description = `Stage: ${stage}. First harvest once mature.${tile.isWatered ? ' 💧 Watered.' : ''}`;
+          if (hasWateringCan && !tile.isWatered) {
+            actions.push({
+              label: 'Water',
+              description: 'Doubles growth speed until mature',
+              handler: () => water(playerRow, playerCol),
+            });
+          }
+          if (!tile.hasSprinkler) {
+            actions.push({
+              label: 'Place Sprinkler',
+              description: 'Keeps this tree watered automatically',
+              cost: `$${SPRINKLER_COST}`,
+              disabled: money < SPRINKLER_COST,
+              handler: () => placeSprinkler(playerRow, playerCol),
+            });
+          }
+          actions.push({
+            label: 'Cut Down Tree',
+            description: 'Remove the tree entirely',
+            cost: `-$${CUT_DOWN_COST}`,
+            disabled: money < CUT_DOWN_COST,
+            handler: () => cutDownTree(playerRow, playerCol),
+          });
           break;
         }
 
         case 'growing': {
           const species = tile.treeType ? TREE_SPECIES[tile.treeType] : null;
           title = `${species?.name ?? 'Tree'}`;
-          description = 'Regrowing nuts... Check back soon!';
+          description = `Regrowing nuts...${tile.isWatered ? ' 💧 Watered.' : ' Check back soon!'}`;
+          if (hasWateringCan && !tile.isWatered) {
+            actions.push({
+              label: 'Water',
+              description: 'Doubles regrowth speed until ready',
+              handler: () => water(playerRow, playerCol),
+            });
+          }
+          if (!tile.hasSprinkler) {
+            actions.push({
+              label: 'Place Sprinkler',
+              description: 'Keeps this tree watered automatically',
+              cost: `$${SPRINKLER_COST}`,
+              disabled: money < SPRINKLER_COST,
+              handler: () => placeSprinkler(playerRow, playerCol),
+            });
+          }
+          actions.push({
+            label: 'Cut Down Tree',
+            description: 'Remove the tree entirely',
+            cost: `-$${CUT_DOWN_COST}`,
+            disabled: money < CUT_DOWN_COST,
+            handler: () => cutDownTree(playerRow, playerCol),
+          });
           break;
         }
 
@@ -148,9 +219,19 @@ export function ActionPanel() {
       title = 'Riverbank';
       description = 'You can build a bridge across the river from here.';
     }
+
+    // Watering can shop (always shown at bottom if not owned)
+    if (!hasWateringCan) {
+      actions.push({
+        label: 'Buy Watering Can',
+        description: 'Water trees to double their growth speed',
+        cost: `$${WATERING_CAN_COST}`,
+        disabled: money < WATERING_CAN_COST,
+        handler: () => buyWateringCan(),
+      });
+    }
   }
 
-  // Reset selection when dialog opens or actions change
   useEffect(() => {
     setSelectedIndex(0);
   }, [show, playerRow, playerCol]);

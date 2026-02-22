@@ -33,7 +33,6 @@ function getSpriteUrl(tile: TileData): string | undefined {
     }
   }
 
-  // Growing = tree is there but regrowing nuts — show mature stage
   if (tile.state === 'growing' && tile.treeType) {
     return getTreeSpritePath(tile.treeType, 'mature');
   }
@@ -79,6 +78,12 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
     <div className={`${styles.tile} ${stateClass} ${highlightClass}`}>
       {spriteUrl && (
         <img src={spriteUrl} alt={tile.state} className={styles.sprite} />
+      )}
+      {tile.hasSprinkler && (
+        <div className={styles.sprinklerIcon}>🚿</div>
+      )}
+      {!tile.hasSprinkler && tile.isWatered && (
+        <div className={styles.waterIcon}>💧</div>
       )}
       {progress !== undefined && progress < 1 && (
         <div className={styles.progressBar}>
