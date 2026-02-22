@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, DRONE_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
@@ -30,6 +30,7 @@ export function ActionPanel() {
   const water = useGameStore((s) => s.water);
   const placeSprinkler = useGameStore((s) => s.placeSprinkler);
   const cutDownTree = useGameStore((s) => s.cutDownTree);
+  const placeDrone = useGameStore((s) => s.placeDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -108,6 +109,15 @@ export function ActionPanel() {
               handler: () => placeSprinkler(playerRow, playerCol),
             });
           }
+          if (!tile.hasDrone) {
+            actions.push({
+              label: 'Deploy Drone',
+              description: 'Automatically harvests nuts when ready',
+              cost: `$${DRONE_COST}`,
+              disabled: money < DRONE_COST,
+              handler: () => placeDrone(playerRow, playerCol),
+            });
+          }
           actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
@@ -139,6 +149,15 @@ export function ActionPanel() {
               handler: () => placeSprinkler(playerRow, playerCol),
             });
           }
+          if (!tile.hasDrone) {
+            actions.push({
+              label: 'Deploy Drone',
+              description: 'Automatically harvests nuts when ready',
+              cost: `$${DRONE_COST}`,
+              disabled: money < DRONE_COST,
+              handler: () => placeDrone(playerRow, playerCol),
+            });
+          }
           actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
@@ -165,6 +184,15 @@ export function ActionPanel() {
               label: `Place Sprinkler (${sprinklerInventory} left)`,
               description: 'Auto-waters this tree permanently',
               handler: () => placeSprinkler(playerRow, playerCol),
+            });
+          }
+          if (!tile.hasDrone) {
+            actions.push({
+              label: 'Deploy Drone',
+              description: 'Automatically harvests nuts when ready',
+              cost: `$${DRONE_COST}`,
+              disabled: money < DRONE_COST,
+              handler: () => placeDrone(playerRow, playerCol),
             });
           }
           actions.push({

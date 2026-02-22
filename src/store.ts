@@ -19,6 +19,7 @@ export interface Tile {
   lastHarvestedAt?: number;
   isWatered?: boolean;    // true = growing at 2x speed
   hasSprinkler?: boolean; // auto-reapplies isWatered every tick
+  hasDrone?: boolean;     // auto-harvests nuts when ready
 }
 
 // --- Autonomous drone entities ---
@@ -67,6 +68,7 @@ export interface GameState {
   buySprinkler: () => void;
   placeSprinkler: (row: number, col: number) => void;
   cutDownTree: (row: number, col: number) => void;
+  placeDrone: (row: number, col: number) => void;
   movePlayer: (direction: Direction) => void;
   toggleDialog: () => void;
   tick: () => void;
@@ -310,6 +312,19 @@ export const useGameStore = create<GameState>()(
         set({ grid: newGrid, money: state.money - CUT_DOWN_COST });
       },
 
+      placeDrone: (row, col) => {
+        const state = get();
+        if (state.money < DRONE_COST) return;
+
+        const tile = state.grid[row]?.[col];
+        if (!tile || !TREE_STATES.has(tile.state) || tile.hasDrone) return;
+
+        const newGrid = state.grid.map((r) => r.map((t) => ({ ...t })));
+        newGrid[row][col] = { ...tile, hasDrone: true };
+
+        set({ grid: newGrid, money: state.money - DRONE_COST });
+      },
+
       movePlayer: (direction) => {
         const state = get();
         const dirMap = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] } as const;
@@ -400,6 +415,7 @@ export const useGameStore = create<GameState>()(
           })
         );
 
+<<<<<<< HEAD
         // --- Phase 2: Drone AI ---
         // Each drone autonomously decides what to do every tick.
         // A "claimed" set prevents two drones from targeting the same tree.
