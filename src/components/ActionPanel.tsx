@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, DRONE_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, WATERING_DRONE_COST, DRONE_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
@@ -20,7 +20,6 @@ export function ActionPanel() {
   const grid = useGameStore((s) => s.grid);
   const money = useGameStore((s) => s.money);
   const hasWateringCan = useGameStore((s) => s.hasWateringCan);
-  const wateringDroneInventory = useGameStore((s) => s.wateringDroneInventory);
   const plantTree = useGameStore((s) => s.plantTree);
   const clearForest = useGameStore((s) => s.clearForest);
   const buyLand = useGameStore((s) => s.buyLand);
@@ -30,7 +29,7 @@ export function ActionPanel() {
   const water = useGameStore((s) => s.water);
   const cutDownTree = useGameStore((s) => s.cutDownTree);
   const buyDrone = useGameStore((s) => s.buyDrone);
-  const placeWateringDrone = useGameStore((s) => s.placeWateringDrone);
+  const buyWateringDrone = useGameStore((s) => s.buyWateringDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -88,17 +87,13 @@ export function ActionPanel() {
         case 'harvestable': {
           const species = tile.treeType ? TREE_SPECIES[tile.treeType] : null;
           title = 'Ready to Harvest!';
-          description = tile.droneHarvestingAt
-            ? 'Drone is harvesting...'
-            : species ? `Your ${species.name} has ripe nuts.` : 'Nuts are ready to pick.';
-          if (!tile.droneHarvestingAt) {
-            actions.push({
-              label: 'Harvest Nuts',
-              description: `Collect and sell — regrows in ${species?.harvestTime ?? '?'}s`,
-              cost: `+$${species?.sellPrice ?? 0}`,
-              handler: () => harvest(playerRow, playerCol),
-            });
-          }
+          description = species ? `Your ${species.name} has ripe nuts.` : 'Nuts are ready to pick.';
+          actions.push({
+            label: 'Harvest Nuts',
+            description: `Collect and sell — regrows in ${species?.harvestTime ?? '?'}s`,
+            cost: `+$${species?.sellPrice ?? 0}`,
+            handler: () => harvest(playerRow, playerCol),
+          });
           if (hasWateringCan && !tile.isWatered) {
             actions.push({
               label: 'Water',
@@ -106,13 +101,13 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
-            actions.push({
-              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
-              description: 'Auto-waters this tree each cycle',
-              handler: () => placeWateringDrone(playerRow, playerCol),
-            });
-          }
+          actions.push({
+            label: 'Buy Watering Drone',
+            description: 'Flies autonomously — waters all unwatered trees',
+            cost: `$${WATERING_DRONE_COST}`,
+            disabled: money < WATERING_DRONE_COST,
+            handler: () => buyWateringDrone(),
+          });
           actions.push({
             label: 'Buy Harvest Drone',
             description: 'Drone flies autonomously — harvests all ripe trees',
@@ -144,13 +139,13 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
-            actions.push({
-              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
-              description: 'Auto-waters this tree each cycle',
-              handler: () => placeWateringDrone(playerRow, playerCol),
-            });
-          }
+          actions.push({
+            label: 'Buy Watering Drone',
+            description: 'Flies autonomously — waters all unwatered trees',
+            cost: `$${WATERING_DRONE_COST}`,
+            disabled: money < WATERING_DRONE_COST,
+            handler: () => buyWateringDrone(),
+          });
           actions.push({
             label: 'Buy Harvest Drone',
             description: 'Drone flies autonomously — harvests all ripe trees',
@@ -179,13 +174,13 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
-            actions.push({
-              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
-              description: 'Auto-waters this tree each cycle',
-              handler: () => placeWateringDrone(playerRow, playerCol),
-            });
-          }
+          actions.push({
+            label: 'Buy Watering Drone',
+            description: 'Flies autonomously — waters all unwatered trees',
+            cost: `$${WATERING_DRONE_COST}`,
+            disabled: money < WATERING_DRONE_COST,
+            handler: () => buyWateringDrone(),
+          });
           actions.push({
             label: 'Buy Harvest Drone',
             description: 'Drone flies autonomously — harvests all ripe trees',

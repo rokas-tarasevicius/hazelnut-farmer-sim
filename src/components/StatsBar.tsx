@@ -5,8 +5,8 @@ export function StatsBar() {
   const money = useGameStore((s) => s.money);
   const totalHarvests = useGameStore((s) => s.totalHarvests);
   const hasWateringCan = useGameStore((s) => s.hasWateringCan);
-  const droneCount = useGameStore((s) => s.drones.length);
-  const wateringDroneInventory = useGameStore((s) => s.wateringDroneInventory);
+  const harvestDroneCount = useGameStore((s) => s.drones.filter((d) => d.type === 'harvest').length);
+  const waterDroneCount = useGameStore((s) => s.drones.filter((d) => d.type === 'water').length);
   const treeCount = useGameStore((s) =>
     s.grid.flat().filter((t) => t.state === 'planted' || t.state === 'growing' || t.state === 'harvestable').length
   );
@@ -29,8 +29,8 @@ export function StatsBar() {
           <span className={styles.statValue}>{totalHarvests}</span>
         </div>
         {hasWateringCan && <div className={styles.stat}><span className={styles.statValue}>💧</span></div>}
-        {wateringDroneInventory > 0 && <div className={styles.stat}><span className={styles.statValue}>💦 ×{wateringDroneInventory}</span></div>}
-        {droneCount > 0 && <div className={styles.stat}><span className={styles.statValue}>🤖 ×{droneCount}</span></div>}
+        {waterDroneCount > 0 && <div className={styles.stat}><span className={styles.statValue}>💦 ×{waterDroneCount}</span></div>}
+        {harvestDroneCount > 0 && <div className={styles.stat}><span className={styles.statValue}>🤖 ×{harvestDroneCount}</span></div>}
         <span className={styles.hints}>Arrows: Move | Enter: Interact | Esc: Close</span>
         <button className={styles.resetBtn} onClick={resetGame}>
           Reset

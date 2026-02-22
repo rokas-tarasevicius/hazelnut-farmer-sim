@@ -77,42 +77,6 @@
   pointer-events: none;
 }
 
-.wateringDroneIcon {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
-.droneActive {
-  animation: droneWork 0.6s ease-in-out infinite alternate;
-}
-
-@keyframes droneWork {
-  from { transform: translateY(0); }
-  to { transform: translateY(-2px); }
-}
-
-/* Watering drone progress (blue bar, topmost) */
-.wateringDroneProgressBar {
-  position: absolute;
-  bottom: 14px;
-  left: 2px;
-  right: 2px;
-  height: 3px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 2px;
-}
-
-.wateringDroneProgressFill {
-  height: 100%;
-  background: #40a0e0;
-  border-radius: 2px;
-  transition: width 1s linear;
-}
 
 /* Normal growth progress bar */
 .progressBar {

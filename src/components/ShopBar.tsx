@@ -17,8 +17,8 @@ interface ShopItem {
 export function ShopBar() {
   const money = useGameStore((s) => s.money);
   const hasWateringCan = useGameStore((s) => s.hasWateringCan);
-  const droneCount = useGameStore((s) => s.drones.length);
-  const wateringDroneInventory = useGameStore((s) => s.wateringDroneInventory);
+  const harvestDroneCount = useGameStore((s) => s.drones.filter((d) => d.type === 'harvest').length);
+  const waterDroneCount = useGameStore((s) => s.drones.filter((d) => d.type === 'water').length);
   const buyWateringCan = useGameStore((s) => s.buyWateringCan);
   const buyDrone = useGameStore((s) => s.buyDrone);
   const buyWateringDrone = useGameStore((s) => s.buyWateringDrone);
@@ -40,7 +40,7 @@ export function ShopBar() {
       name: 'Watering Drone',
       description: 'Auto-waters a tree each grow cycle',
       cost: WATERING_DRONE_COST,
-      badge: wateringDroneInventory > 0 ? wateringDroneInventory : undefined,
+      badge: waterDroneCount > 0 ? waterDroneCount : undefined,
       disabled: money < WATERING_DRONE_COST,
       onBuy: buyWateringDrone,
       isSprite: true,
@@ -51,7 +51,7 @@ export function ShopBar() {
       name: 'Harvest Drone',
       description: 'Autonomous harvester — flies to trees',
       cost: DRONE_COST,
-      badge: droneCount > 0 ? droneCount : undefined,
+      badge: harvestDroneCount > 0 ? harvestDroneCount : undefined,
       disabled: money < DRONE_COST,
       onBuy: buyDrone,
       isSprite: true,
@@ -89,7 +89,7 @@ export function ShopBar() {
           </button>
         ))}
       </div>
-      <div className={styles.tip}>Drones are autonomous! Sprinklers: place on trees via interact (Enter)</div>
+      <div className={styles.tip}>Both drones fly autonomously tree to tree!</div>
     </div>
   );
 }

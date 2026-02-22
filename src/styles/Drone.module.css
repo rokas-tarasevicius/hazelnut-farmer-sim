@@ -15,8 +15,8 @@
 }
 
 .icon {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   image-rendering: pixelated;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
 }
@@ -54,7 +54,14 @@
 
 .progressFill {
   height: 100%;
-  background: #e0c040; /* gold */
+  background: #e0c040; /* gold — harvest drone */
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+.progressFillWater {
+  height: 100%;
+  background: #40a0e0; /* blue — watering drone */
   border-radius: 2px;
   transition: width 1s linear;
 }
