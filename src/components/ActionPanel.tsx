@@ -20,8 +20,7 @@ export function ActionPanel() {
   const grid = useGameStore((s) => s.grid);
   const money = useGameStore((s) => s.money);
   const hasWateringCan = useGameStore((s) => s.hasWateringCan);
-  const droneCount = useGameStore((s) => s.drones.length);
-  const sprinklerInventory = useGameStore((s) => s.sprinklerInventory);
+  const wateringDroneInventory = useGameStore((s) => s.wateringDroneInventory);
   const plantTree = useGameStore((s) => s.plantTree);
   const clearForest = useGameStore((s) => s.clearForest);
   const buyLand = useGameStore((s) => s.buyLand);
@@ -31,7 +30,7 @@ export function ActionPanel() {
   const water = useGameStore((s) => s.water);
   const cutDownTree = useGameStore((s) => s.cutDownTree);
   const placeDrone = useGameStore((s) => s.placeDrone);
-  const placeSprinkler = useGameStore((s) => s.placeSprinkler);
+  const placeWateringDrone = useGameStore((s) => s.placeWateringDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -107,14 +106,14 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasSprinkler && sprinklerInventory > 0) {
+          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
             actions.push({
-              label: `Place Sprinkler (${sprinklerInventory} left)`,
-              description: 'Auto-waters this tree permanently',
-              handler: () => placeSprinkler(playerRow, playerCol),
+              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
+              description: 'Auto-waters this tree each cycle',
+              handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
-          if (!tile.hasDrone && droneCount >= 0) {
+          if (!tile.hasDrone) {
             actions.push({
               label: `Deploy Drone`,
               description: 'Auto-harvests nuts when ready',
@@ -145,14 +144,14 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasSprinkler && sprinklerInventory > 0) {
+          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
             actions.push({
-              label: `Place Sprinkler (${sprinklerInventory} left)`,
-              description: 'Auto-waters this tree permanently',
-              handler: () => placeSprinkler(playerRow, playerCol),
+              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
+              description: 'Auto-waters this tree each cycle',
+              handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
-          if (!tile.hasDrone && droneCount >= 0) {
+          if (!tile.hasDrone) {
             actions.push({
               label: `Deploy Drone`,
               description: 'Auto-harvests nuts when ready',
@@ -180,14 +179,14 @@ export function ActionPanel() {
               handler: () => water(playerRow, playerCol),
             });
           }
-          if (!tile.hasSprinkler && sprinklerInventory > 0) {
+          if (!tile.hasWateringDrone && wateringDroneInventory > 0) {
             actions.push({
-              label: `Place Sprinkler (${sprinklerInventory} left)`,
-              description: 'Auto-waters this tree permanently',
-              handler: () => placeSprinkler(playerRow, playerCol),
+              label: `Deploy Watering Drone (${wateringDroneInventory} left)`,
+              description: 'Auto-waters this tree each cycle',
+              handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
-          if (!tile.hasDrone && droneCount >= 0) {
+          if (!tile.hasDrone) {
             actions.push({
               label: `Deploy Drone`,
               description: 'Auto-harvests nuts when ready',

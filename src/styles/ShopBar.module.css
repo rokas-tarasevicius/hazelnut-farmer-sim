@@ -70,6 +70,12 @@
   line-height: 1;
 }
 
+.iconSprite {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
 .badge {
   position: absolute;
   top: -4px;
