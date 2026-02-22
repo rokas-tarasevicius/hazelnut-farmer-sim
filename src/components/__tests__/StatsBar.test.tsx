@@ -24,12 +24,12 @@ describe('StatsBar', () => {
     expect(screen.getByText('$100')).toBeInTheDocument();
   });
 
-  it('renders growing count as 0 initially', () => {
+  it('renders tree count as 0 initially', () => {
     render(<StatsBar />);
-    expect(screen.getByText('Growing:')).toBeInTheDocument();
-    const growingLabel = screen.getByText('Growing:');
-    const growingValue = growingLabel.parentElement?.querySelector('[class*="statValue"]');
-    expect(growingValue?.textContent).toBe('0');
+    expect(screen.getByText('Trees:')).toBeInTheDocument();
+    const label = screen.getByText('Trees:');
+    const value = label.parentElement?.querySelector('[class*="statValue"]');
+    expect(value?.textContent).toBe('0');
   });
 
   it('renders harvests count', () => {
@@ -37,18 +37,18 @@ describe('StatsBar', () => {
     expect(screen.getByText('Harvests:')).toBeInTheDocument();
   });
 
-  it('shows correct growing count after planting', () => {
+  it('shows correct tree count after planting', () => {
     const empty = findEmptyTile();
     expect(empty).not.toBeNull();
     useGameStore.getState().plantTree(empty!.row, empty!.col, 'common_hazelnut');
 
     render(<StatsBar />);
-    const growingLabel = screen.getByText('Growing:');
-    const growingValue = growingLabel.parentElement?.querySelector('[class*="statValue"]');
-    expect(growingValue?.textContent).toBe('1');
+    const label = screen.getByText('Trees:');
+    const value = label.parentElement?.querySelector('[class*="statValue"]');
+    expect(value?.textContent).toBe('1');
   });
 
-  it('growing count decreases after harvest', () => {
+  it('tree count stays after harvest (tree regrows)', () => {
     const empty = findEmptyTile();
     expect(empty).not.toBeNull();
     useGameStore.getState().plantTree(empty!.row, empty!.col, 'common_hazelnut');
@@ -61,8 +61,9 @@ describe('StatsBar', () => {
     useGameStore.getState().harvest(empty!.row, empty!.col);
 
     render(<StatsBar />);
-    const growingLabel = screen.getByText('Growing:');
-    const growingValue = growingLabel.parentElement?.querySelector('[class*="statValue"]');
-    expect(growingValue?.textContent).toBe('0');
+    // Tree is now in 'growing' state — still counted
+    const label = screen.getByText('Trees:');
+    const value = label.parentElement?.querySelector('[class*="statValue"]');
+    expect(value?.textContent).toBe('1');
   });
 });

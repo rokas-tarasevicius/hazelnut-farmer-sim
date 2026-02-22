@@ -2,8 +2,9 @@ export interface TreeSpecies {
   id: string;
   name: string;
   cost: number;
-  growTime: number; // seconds
-  sellPrice: number;
+  growTime: number; // seconds — initial growth to maturity
+  harvestTime: number; // seconds — time to regrow nuts after harvest
+  sellPrice: number; // per harvest
   description: string;
   color: string; // fallback color if sprite missing
 }
@@ -12,37 +13,41 @@ export const TREE_SPECIES: Record<string, TreeSpecies> = {
   common_hazelnut: {
     id: 'common_hazelnut',
     name: 'Common Hazelnut',
-    cost: 10,
-    growTime: 30,
-    sellPrice: 25,
-    description: 'Reliable starter tree. Quick to grow.',
+    cost: 30,
+    growTime: 60,
+    harvestTime: 20,
+    sellPrice: 8,
+    description: 'Cheap to plant, quick nut cycles.',
     color: '#8B6914',
   },
   turkish_hazelnut: {
     id: 'turkish_hazelnut',
     name: 'Turkish Hazelnut',
-    cost: 25,
-    growTime: 60,
-    sellPrice: 70,
-    description: 'Better margins. Worth the wait.',
+    cost: 75,
+    growTime: 120,
+    harvestTime: 35,
+    sellPrice: 18,
+    description: 'Better yield per harvest.',
     color: '#A0522D',
   },
   almond: {
     id: 'almond',
     name: 'Almond',
-    cost: 40,
-    growTime: 90,
-    sellPrice: 120,
-    description: 'High value nut. Takes patience.',
+    cost: 150,
+    growTime: 180,
+    harvestTime: 50,
+    sellPrice: 30,
+    description: 'Premium nuts. Steady income.',
     color: '#DEB887',
   },
   walnut: {
     id: 'walnut',
     name: 'Walnut',
-    cost: 80,
-    growTime: 180,
-    sellPrice: 250,
-    description: 'Premium tree. Slow but lucrative.',
+    cost: 300,
+    growTime: 300,
+    harvestTime: 75,
+    sellPrice: 55,
+    description: 'Expensive investment. Best long-term.',
     color: '#654321',
   },
 };

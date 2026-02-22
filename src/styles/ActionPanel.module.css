@@ -1,66 +1,63 @@
-.panel {
+.overlay {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--color-bg-light);
-  border-top: 3px solid var(--color-gold);
-  padding: 12px 20px;
-  z-index: 50;
-  animation: slideUp 0.15s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.header {
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog {
+  background: var(--color-bg-light);
+  border: 3px solid var(--color-gold);
+  padding: 20px;
+  min-width: 280px;
+  max-width: 380px;
+  animation: popIn 0.12s ease-out;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .title {
   font-size: 16px;
   font-weight: bold;
   color: var(--color-gold);
-}
-
-.closeBtn {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-color: #555;
-  opacity: 0.7;
+  margin-bottom: 8px;
 }
 
 .description {
   font-size: 13px;
   opacity: 0.8;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  line-height: 1.4;
 }
 
 .actions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .action {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
   padding: 8px 12px;
   border: 2px solid #555;
   background: var(--color-bg);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  min-width: 180px;
+  transition: border-color 0.1s, background 0.1s;
+  text-align: left;
 }
 
 .action:hover {
@@ -68,33 +65,27 @@
   background: var(--color-bg-light);
 }
 
+.action.selected {
+  border-color: var(--color-gold);
+  background: var(--color-bg-light);
+  box-shadow: inset 2px 0 0 var(--color-gold);
+}
+
 .action:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.action:disabled:hover {
+.action:disabled:hover,
+.action:disabled.selected {
   border-color: #555;
   background: var(--color-bg);
-}
-
-.actionKey {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--color-gold);
-  border-radius: 3px;
-  font-size: 12px;
-  color: var(--color-gold);
-  flex-shrink: 0;
+  box-shadow: none;
 }
 
 .actionInfo {
   display: flex;
   flex-direction: column;
-  text-align: left;
 }
 
 .actionLabel {
@@ -105,11 +96,19 @@
 .actionDesc {
   font-size: 11px;
   opacity: 0.7;
+  margin-top: 2px;
 }
 
 .actionCost {
   font-size: 14px;
   color: var(--color-gold);
   white-space: nowrap;
-  margin-left: auto;
+  margin-left: 12px;
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 10px;
+  opacity: 0.4;
+  text-align: center;
 }
