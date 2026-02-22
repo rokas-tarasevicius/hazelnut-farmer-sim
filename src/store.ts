@@ -84,12 +84,13 @@ function createInitialGrid(seed: number): Tile[][] {
 
 function freshState() {
   const seed = newSeed();
+  const grid = createInitialGrid(seed); // must run before getPlayerStart()
   const start = getPlayerStart();
   return {
     money: 100,
     totalHarvests: 0,
     treesPlanted: 0,
-    grid: createInitialGrid(seed),
+    grid,
     gridRows: MAP_ROWS,
     gridCols: MAP_COLS,
     playerRow: start.row,
