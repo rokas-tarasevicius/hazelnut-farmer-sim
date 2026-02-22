@@ -72,8 +72,7 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
 
   const stateClass = tile.locked ? styles.locked :
     (tile.state === 'bridging' ? styles.clearing :
-      tile.state === 'growing' ? styles.planted :
-        styles[tile.state]) || '';
+      styles[tile.state]) || '';
   const highlightClass = isPlayerHere ? styles.playerHighlight : '';
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
+import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
 
 interface Action {
@@ -71,16 +72,6 @@ export function ActionPanel() {
               disabled: money < CLEAR_COST,
               handler: () => clearForest(playerRow, playerCol),
             });
-          } else if (tile.terrain === 'river') {
-            title = 'River';
-            description = 'Build a bridge to cross.';
-            actions.push({
-              label: 'Build Bridge',
-              description: 'Takes 20 seconds',
-              cost: `$${BRIDGE_COST}`,
-              disabled: money < BRIDGE_COST,
-              handler: () => buildBridge(playerRow, playerCol),
-            });
           } else {
             title = 'Grass';
             description = 'Nothing to do here.';
@@ -134,6 +125,28 @@ export function ActionPanel() {
           description = 'A sturdy bridge crosses the river.';
           break;
       }
+    }
+
+    // Add bridge building for any adjacent river tiles
+    const adjacentRivers = getAdjacentRiverTiles(grid, playerRow, playerCol);
+    for (const river of adjacentRivers) {
+      const dirLabel =
+        river.row < playerRow ? 'north' :
+        river.row > playerRow ? 'south' :
+        river.col < playerCol ? 'west' : 'east';
+      actions.push({
+        label: `Build Bridge (${dirLabel})`,
+        description: 'Takes 20 seconds',
+        cost: `$${BRIDGE_COST}`,
+        disabled: money < BRIDGE_COST,
+        handler: () => buildBridge(river.row, river.col),
+      });
+    }
+
+    // Update title if only action is bridge building
+    if (adjacentRivers.length > 0 && title === '' ) {
+      title = 'Riverbank';
+      description = 'You can build a bridge across the river from here.';
     }
   }
 
