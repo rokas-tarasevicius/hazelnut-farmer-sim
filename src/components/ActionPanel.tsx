@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, DRONE_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
@@ -29,6 +29,7 @@ export function ActionPanel() {
   const buyWateringCan = useGameStore((s) => s.buyWateringCan);
   const water = useGameStore((s) => s.water);
   const cutDownTree = useGameStore((s) => s.cutDownTree);
+  const buyDrone = useGameStore((s) => s.buyDrone);
   const placeWateringDrone = useGameStore((s) => s.placeWateringDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -113,6 +114,13 @@ export function ActionPanel() {
             });
           }
           actions.push({
+            label: 'Buy Harvest Drone',
+            description: 'Drone flies autonomously — harvests all ripe trees',
+            cost: `$${DRONE_COST}`,
+            disabled: money < DRONE_COST,
+            handler: () => buyDrone(),
+          });
+          actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
             cost: `-$${CUT_DOWN_COST}`,
@@ -144,6 +152,13 @@ export function ActionPanel() {
             });
           }
           actions.push({
+            label: 'Buy Harvest Drone',
+            description: 'Drone flies autonomously — harvests all ripe trees',
+            cost: `$${DRONE_COST}`,
+            disabled: money < DRONE_COST,
+            handler: () => buyDrone(),
+          });
+          actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
             cost: `-$${CUT_DOWN_COST}`,
@@ -171,6 +186,13 @@ export function ActionPanel() {
               handler: () => placeWateringDrone(playerRow, playerCol),
             });
           }
+          actions.push({
+            label: 'Buy Harvest Drone',
+            description: 'Drone flies autonomously — harvests all ripe trees',
+            cost: `$${DRONE_COST}`,
+            disabled: money < DRONE_COST,
+            handler: () => buyDrone(),
+          });
           actions.push({
             label: 'Cut Down Tree',
             description: 'Remove the tree entirely',
