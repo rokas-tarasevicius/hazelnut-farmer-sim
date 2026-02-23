@@ -65,3 +65,10 @@
   border-radius: 2px;
   transition: width 1s linear;
 }
+
+.progressFillPlant {
+  height: 100%;
+  background: #3ab840; /* green — planting drone */
+  border-radius: 2px;
+  transition: width 1s linear;
+}

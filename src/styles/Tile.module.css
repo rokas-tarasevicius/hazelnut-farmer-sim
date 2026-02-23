@@ -78,15 +78,15 @@
 
 .p {
   position: absolute;
-  background: #60c8ff;
-  border-radius: 50%;
+  background: #a8e8ff;
+  image-rendering: pixelated;
   opacity: 0;
   animation: particleRise 1.8s ease-out infinite;
 }
 
 @keyframes particleRise {
-  0%   { transform: translateY(0);     opacity: 0.85; }
-  70%  { opacity: 0.5; }
+  0%   { transform: translateY(0);     opacity: 1; }
+  70%  { opacity: 0.7; }
   100% { transform: translateY(-18px); opacity: 0; }
 }
 

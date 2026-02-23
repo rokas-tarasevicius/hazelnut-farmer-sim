@@ -37,13 +37,15 @@ export function Drones() {
           drone.state === 'harvesting' ? styles.harvesting :
           '';
 
-        const spriteUrl = drone.type === 'water'
-          ? '/sprites/drone_water.svg'
-          : '/sprites/drone_harvest.svg';
+        const spriteUrl =
+          drone.type === 'water' ? '/sprites/drone_water.svg' :
+          drone.type === 'plant' ? '/sprites/drone_plant.svg' :
+          '/sprites/drone_harvest.svg';
 
-        const fillClass = drone.type === 'water'
-          ? styles.progressFillWater
-          : styles.progressFill;
+        const fillClass =
+          drone.type === 'water' ? styles.progressFillWater :
+          drone.type === 'plant' ? styles.progressFillPlant :
+          styles.progressFill;
 
         return (
           <div

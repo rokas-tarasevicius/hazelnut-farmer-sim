@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, WATERING_DRONE_COST, DRONE_COST } from '../store';
+import { useGameStore, getLandPrice, CLEAR_COST, BRIDGE_COST, CUT_DOWN_COST, WATERING_CAN_COST, WATERING_DRONE_COST, DRONE_COST, PLANTING_DRONE_COST } from '../store';
 import { TREE_SPECIES, getGrowthStage } from '../data/trees';
 import { getAdjacentRiverTiles } from '../data/map';
 import styles from '../styles/ActionPanel.module.css';
@@ -30,6 +30,7 @@ export function ActionPanel() {
   const cutDownTree = useGameStore((s) => s.cutDownTree);
   const buyDrone = useGameStore((s) => s.buyDrone);
   const buyWateringDrone = useGameStore((s) => s.buyWateringDrone);
+  const buyPlantingDrone = useGameStore((s) => s.buyPlantingDrone);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -55,7 +56,7 @@ export function ActionPanel() {
       switch (tile.state) {
         case 'empty':
           title = 'Empty Plot';
-          description = 'Choose a species to plant.';
+          description = 'Plant manually or buy a drone to auto-plant.';
           Object.values(TREE_SPECIES).forEach((species) => {
             actions.push({
               label: species.name,
@@ -63,6 +64,15 @@ export function ActionPanel() {
               cost: `$${species.cost}`,
               disabled: money < species.cost,
               handler: () => plantTree(playerRow, playerCol, species.id),
+            });
+          });
+          Object.values(TREE_SPECIES).forEach((species) => {
+            actions.push({
+              label: `Auto-plant ${species.name} Drone`,
+              description: `Flies to empty plots and plants ${species.name} automatically`,
+              cost: `$${PLANTING_DRONE_COST} + $${species.cost}/tree`,
+              disabled: money < PLANTING_DRONE_COST,
+              handler: () => buyPlantingDrone(species.id),
             });
           });
           break;
