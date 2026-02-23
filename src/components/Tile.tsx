@@ -80,7 +80,14 @@ export const Tile = memo(function Tile({ tile, isPlayerHere }: TileProps) {
         <img src={spriteUrl} alt={tile.state} className={styles.sprite} />
       )}
       {tile.isWatered && (
-        <div className={styles.waterIcon}>💧</div>
+        <div className={styles.waterParticles}>
+          <div className={styles.p} style={{ left: '18%', top: '68%', animationDelay: '0.0s', width: '3px', height: '3px' }} />
+          <div className={styles.p} style={{ left: '48%', top: '72%', animationDelay: '0.6s', width: '2px', height: '2px' }} />
+          <div className={styles.p} style={{ left: '72%', top: '60%', animationDelay: '1.1s', width: '3px', height: '3px' }} />
+          <div className={styles.p} style={{ left: '30%', top: '55%', animationDelay: '1.6s', width: '2px', height: '2px' }} />
+          <div className={styles.p} style={{ left: '62%', top: '75%', animationDelay: '0.3s', width: '2px', height: '2px' }} />
+          <div className={styles.p} style={{ left: '82%', top: '50%', animationDelay: '1.3s', width: '3px', height: '3px' }} />
+        </div>
       )}
       {progress !== undefined && progress < 1 && (
         <div className={styles.progressBar}>

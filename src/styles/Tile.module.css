@@ -67,14 +67,27 @@
   z-index: 5;
 }
 
-/* Corner icons */
-.waterIcon {
+/* Water particles — shown on watered tiles */
+.waterParticles {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 10px;
-  line-height: 1;
+  inset: 0;
   pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.p {
+  position: absolute;
+  background: #60c8ff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleRise 1.8s ease-out infinite;
+}
+
+@keyframes particleRise {
+  0%   { transform: translateY(0);     opacity: 0.85; }
+  70%  { opacity: 0.5; }
+  100% { transform: translateY(-18px); opacity: 0; }
 }
 
 
